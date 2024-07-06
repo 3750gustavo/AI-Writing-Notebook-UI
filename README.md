@@ -1,5 +1,7 @@
 # AI Writing Notebook UI
 
+![AI Writing Notebook UI Screenshot](images/UI.JPG)
+
 ## Description
 A GUI-based AI writing assistant that supports text generation, session saving and loading, advanced options toggling, and voice generation for the generated text, made to work out of the box for infermatic users, just remove the .example from the `config.json.example` and fill in the required `API_KEY` key with your API key from [Infermatic](https://ui.infermatic.ai/) and optionally fill in the `TTS_VOICE_KEY` key with your API key from [NovelAI](https://novelai.net/) for voice generation support.
 
