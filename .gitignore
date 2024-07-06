@@ -1,0 +1,14 @@
+# Ignore all temporary files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+.dist
+
+# Ignore specific files or directories
+session.json
+generate_voice.mp3
+config.json
+
+# Ignore development tools
+.vscode/
