@@ -11,8 +11,6 @@ pygame.mixer.init()
 # Global flag to control audio playback
 audio_playback_active = threading.Event()
 
-#jwt = "pst-YQD0Vnk6gljMZaDbiw8rincWP3zeb4IfMwlXrJTqnXuqRbcumz7q7oFF9MnfANIR"
-
 # Load the JWT token from config.json
 with open("config.json", "r") as f:
     config = json.load(f)
