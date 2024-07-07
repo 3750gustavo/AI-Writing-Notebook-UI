@@ -1,11 +1,23 @@
+import json
+import os
+import threading
 import tkinter as tk
 from tkinter import ttk, scrolledtext
-import threading, json, requests, sseclient, os
+
+import requests
+import sseclient
+
+with open("config.json", "r") as f:
+    config = json.load(f)
+
+if config['USE_TTS']:
+    from generate_voice import generate_voice, stop_audio
 
 class Button:
     def __init__(self, master, text, command, side='top', padx=5, pady=5):
         self.button = tk.Button(master, text=text, command=command)
         self.button.pack(side=side, padx=padx, pady=pady)
+
 
 class ParameterInput:
     def __init__(self, master, label, default_value):
@@ -18,17 +30,16 @@ class ParameterInput:
     def get(self):
         return self.var.get()
 
+
 class APIHandler:
     BASE_URL = "https://api.totalgpt.ai"
 
     @classmethod
     def load_api_key(cls):
-        with open("config.json", "r") as f:
-            config = json.load(f)
-            cls.HEADERS = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {config['API_KEY']}"
-            }
+        cls.HEADERS = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {config['INFERMATIC_API_KEY']}"
+        }
 
     @classmethod
     def fetch_models(cls):
@@ -55,6 +66,7 @@ class APIHandler:
     def generate_text(cls, data):
         cls.load_api_key()
         return requests.post(f"{cls.BASE_URL}/completions", json=data, headers=cls.HEADERS, timeout=300, stream=True)
+
 
 class TextGeneratorApp:
     def __init__(self, root):
@@ -104,6 +116,12 @@ class TextGeneratorApp:
         }
 
         self.setup_advanced_options(control_frame)
+
+        if config['USE_TTS']:
+            # Add audio toggle checkbox
+            self.audio_toggle_var = tk.BooleanVar(value=True)  # Default to audio generation enabled
+            self.audio_toggle_checkbox = tk.Checkbutton(control_frame, text="Enable Audio", variable=self.audio_toggle_var)
+            self.audio_toggle_checkbox.pack(side='top', pady=5)
 
         # Font size buttons
         font_size_frame = tk.Frame(self.root)
@@ -166,12 +184,14 @@ class TextGeneratorApp:
     def start_generation(self):
         self.last_prompt = self.text_widget.get("1.0", tk.END).strip()
         self.cancel_requested = False
-        self.text_widget.tag_remove('highlight', '1.0', tk.END) # Reset color
+        self.text_widget.tag_remove('highlight', '1.0', tk.END)  # Reset color
         threading.Thread(target=self.generate_text, args=(self.last_prompt,)).start()
         self.save_session()
 
     def cancel_generation(self):
         self.cancel_requested = True
+        if config['USE_TTS']:
+            stop_audio()
 
     def generate_text(self, prompt):
         data = {
@@ -196,15 +216,21 @@ class TextGeneratorApp:
                         payload = json.loads(event.data)
                         chunk = payload['choices'][0]['text']
                         self.last_generated_text += chunk
-                        self.text_widget.insert(tk.END, chunk, 'highlight') # Tag new text
-                        self.text_widget.tag_config('highlight', foreground='blue') # Style the tag
+                        self.text_widget.insert(tk.END, chunk, 'highlight')  # Tag new text
+                        self.text_widget.tag_config('highlight', foreground='blue')  # Style the tag
                         self.text_widget.see(tk.END)
-                    except (json.JSONDecodeError, KeyError):
+                    except (json.JSONDecodeError, KeyError) as error:
+                        print(error)
                         pass
         except requests.exceptions.Timeout:
             self.text_widget.insert(tk.END, "The request timed out")
         except json.JSONDecodeError:
             self.text_widget.insert(tk.END, "Failed to decode JSON response")
+
+        if config['USE_TTS']:
+            # Check if audio generation is enabled
+            if self.audio_toggle_var.get():
+                generate_voice(self.last_generated_text)
 
         self.save_session()
 
@@ -231,6 +257,7 @@ class TextGeneratorApp:
     def decrease_font_size(self):
         self.font_size = max(8, self.font_size - 2)
         self.text_widget.config(font=("TkDefaultFont", self.font_size))
+
 
 if __name__ == "__main__":
     root = tk.Tk()

@@ -4,6 +4,7 @@
 *.pyd
 __pycache__/
 .dist
+.idea
 
 # Ignore specific files or directories
 session.json
