@@ -10,6 +10,7 @@ __pycache__/
 session.json
 generate_voice.mp3
 config.json
+temp.py
 
 # Ignore development tools
 .vscode/
