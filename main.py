@@ -314,9 +314,10 @@ class TextGeneratorApp:
         self.save_session()
 
     def update_model_dropdown(self, models):
-        self.model_dropdown['values'] = models
-        if models:
-            self.model_var.set(models[0])
+        sorted_models = sorted(models)
+        self.model_dropdown['values'] = sorted_models
+        if sorted_models:
+            self.model_var.set(sorted_models[0])
 
     def increase_font_size(self):
         self.font_size += 2
