@@ -3,7 +3,7 @@
 ![AI Writing Notebook UI Screenshot](images/UI.JPG)
 
 ## Description
-A GUI-based AI writing assistant that supports text generation, session saving and loading, advanced options toggling, and voice generation for the generated text, made to work out of the box for infermatic users, just remove the .example from the `config.json.example` and fill in the required `API_KEY` key with your API key from [Infermatic](https://ui.infermatic.ai/) and optionally fill in the `NOVELAI_API_KEY` key with your API key from [NovelAI](https://novelai.net/) for voice generation support (Account Settings > Account > Get Persistent API Token).
+A GUI-based AI writing assistant that supports text generation, session saving and loading, advanced options toggling, and voice generation for the generated text, made to work out of the box for infermatic users, just remove the .example from the `config.json.example` and fill in the required `INFERMATIC_API_KEY` key with your API key from [Infermatic](https://ui.infermatic.ai/) and optionally fill in the `NOVELAI_API_KEY` key with your API key from [NovelAI](https://novelai.net/) for voice generation support (Account Settings > Account > Get Persistent API Token).
 
 ## Features
 - **Text Generation:** Generates text based on the provided prompt using AI models.
@@ -14,8 +14,8 @@ A GUI-based AI writing assistant that supports text generation, session saving a
 
 ## Usage
 ### Starting the Application:
-- Run the application using the command `python AI Writing Notebook UI - Basic.py` for basic functionality or `AI Writing Notebook UI - NovelAI TTS support.py` for advanced features including voice generation.
-- The application can be started more easily by running dragging the repo folder into a IDE like vscode and just running the desired file.
+- Rename `config.json.example` to `config.json` and fill in the required fields, leave `USE_TTS` as `false` if you don't have a NovelAI API key.
+- Run the application by opening the `start.bat` file or running `python main.py` in the terminal.
 - The application window will open, and you can begin typing your prompt in the text area.
 
 ### Text Generation:
@@ -24,7 +24,6 @@ A GUI-based AI writing assistant that supports text generation, session saving a
 
 ### Session Management:
 - The application automatically saves your session when you close the window.
-- To load a previous session, select "Load Session" from the file menu.
 
 ### Advanced Options:
 - Toggle the advanced options to adjust parameters like temperature, top_k, presence_penalty, min_p, and top_p, etc. for more control over the text generation.
