@@ -2,4 +2,4 @@ requests
 sseclient-py
 pygame
 pydantic
-novelai_python
+novelai-python
