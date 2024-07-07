@@ -2,7 +2,7 @@ import json
 import os
 import threading
 import tkinter as tk
-from tkinter import ttk, scrolledtext
+from tkinter import ttk, scrolledtext, simpledialog, messagebox
 
 import requests
 import sseclient
@@ -18,7 +18,6 @@ class Button:
         self.button = tk.Button(master, text=text, command=command)
         self.button.pack(side=side, padx=padx, pady=pady)
 
-
 class ParameterInput:
     def __init__(self, master, label, default_value):
         self.frame = tk.Frame(master)
@@ -29,7 +28,6 @@ class ParameterInput:
 
     def get(self):
         return self.var.get()
-
 
 class APIHandler:
     BASE_URL = "https://api.totalgpt.ai"
@@ -67,6 +65,18 @@ class APIHandler:
         cls.load_api_key()
         return requests.post(f"{cls.BASE_URL}/completions", json=data, headers=cls.HEADERS, timeout=300, stream=True)
 
+    @staticmethod
+    def check_grammar(text):
+        try:
+            response = requests.post(
+                "https://api.languagetool.org/v2/check",
+                data={"text": text, "language": "en-US"}
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error checking grammar: {e}")
+            return {}
 
 class TextGeneratorApp:
     def __init__(self, root):
@@ -101,6 +111,7 @@ class TextGeneratorApp:
     def setup_ui(self):
         self.text_widget = scrolledtext.ScrolledText(self.root, wrap='word', width=60, height=20)
         self.text_widget.pack(expand=True, fill='both', side='left', padx=10, pady=10)
+        self.text_widget.bind("<Button-1>", self.on_text_click)  # Bind click event
 
         control_frame = tk.Frame(self.root)
         control_frame.pack(side='right', fill='y', pady=10)
@@ -130,6 +141,7 @@ class TextGeneratorApp:
         self.font_size = 12  # Default font size
         self.text_widget.config(font=("TkDefaultFont", self.font_size))
 
+        tk.Button(font_size_frame, text="Check Grammar", command=self.check_grammar).pack(side='right')
         tk.Button(font_size_frame, text="+", command=self.increase_font_size).pack(side='right')
         tk.Button(font_size_frame, text="-", command=self.decrease_font_size).pack(side='right')
 
@@ -164,6 +176,7 @@ class TextGeneratorApp:
         self.cancel_requested = False
         self.last_prompt = ""
         self.last_generated_text = ""
+        self.grammar_errors = []  # Store grammar errors
 
     def toggle_advanced_options(self):
         if self.show_advanced.get():
@@ -245,6 +258,53 @@ class TextGeneratorApp:
         self.text_widget.insert(tk.END, self.last_prompt)
         self.save_session()
 
+    def check_grammar(self):
+        text = self.text_widget.get("1.0", tk.END).strip()
+        results = APIHandler.check_grammar(text)
+        self.display_grammar_errors(results)
+
+    def display_grammar_errors(self, results):
+        self.grammar_errors = []  # Clear previous errors
+        self.text_widget.tag_remove('grammar_error', '1.0', tk.END)  # Clear previous highlights
+
+        if 'matches' in results:
+            for match in results['matches']:
+                offset = match['offset']
+                length = match['length']
+                self.text_widget.tag_add('grammar_error', f"1.0 + {offset} chars", f"1.0 + {offset + length} chars")
+                self.text_widget.tag_config('grammar_error', background='yellow')
+                self.grammar_errors.append((f"1.0 + {offset} chars", f"1.0 + {offset + length} chars", match['message'], match['replacements']))
+
+    def on_text_click(self, event):
+        # Get the position of the click
+        index = self.text_widget.index(f"@{event.x},{event.y}")
+
+        # Check if the click is on a highlighted error
+        for start, end, message, replacements in self.grammar_errors:
+            if self.text_widget.compare(index, ">=", start) and self.text_widget.compare(index, "<=", end):
+                self.show_suggestions_popup(start, end, message, replacements)
+                break
+
+    def show_suggestions_popup(self, start, end, message, replacements):
+        # Create a new window for the suggestions popup
+        popup = tk.Toplevel(self.root)
+        popup.title("Grammar Suggestions")
+
+        # Display the error message
+        tk.Label(popup, text=message, wraplength=400).pack(pady=10)
+
+        # Display the suggestions
+        for replacement in replacements:
+            suggestion = replacement['value']
+            button = tk.Button(popup, text=suggestion, command=lambda s=suggestion: self.apply_suggestion(start, end, s))
+            button.pack(fill='x', padx=10, pady=5)
+
+    def apply_suggestion(self, start, end, suggestion):
+        self.text_widget.delete(start, end)
+        self.text_widget.insert(start, suggestion)
+        self.text_widget.tag_remove('grammar_error', start, end)
+        self.save_session()
+
     def update_model_dropdown(self, models):
         self.model_dropdown['values'] = models
         if models:
@@ -257,7 +317,6 @@ class TextGeneratorApp:
     def decrease_font_size(self):
         self.font_size = max(8, self.font_size - 2)
         self.text_widget.config(font=("TkDefaultFont", self.font_size))
-
 
 if __name__ == "__main__":
     root = tk.Tk()
