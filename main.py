@@ -259,7 +259,8 @@ class TextGeneratorApp:
         self.save_session()
 
     def check_grammar(self):
-        text = self.text_widget.get("1.0", tk.END).strip()
+        # Get the last 20k characters from the text widget
+        text = self.text_widget.get("1.0", tk.END)[-20000:].strip()
         results = APIHandler.check_grammar(text)
         self.display_grammar_errors(results)
 
