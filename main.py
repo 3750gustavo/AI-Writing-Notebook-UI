@@ -1,11 +1,8 @@
-import json
-import os
-import threading
+import os,json,hashlib
+import threading,asyncio
 import tkinter as tk
 from tkinter import ttk, scrolledtext, simpledialog, messagebox
-
-import requests
-import sseclient
+import requests,sseclient
 
 with open("config.json", "r") as f:
     config = json.load(f)
@@ -66,7 +63,7 @@ class APIHandler:
         return requests.post(f"{cls.BASE_URL}/completions", json=data, headers=cls.HEADERS, timeout=300, stream=True)
 
     @staticmethod
-    def check_grammar(text):
+    async def check_grammar(text):
         try:
             response = requests.post(
                 "https://api.languagetool.org/v2/check",
@@ -89,8 +86,9 @@ class TextGeneratorApp:
         self.fetch_models()
         self.load_session()
 
+        self.grammar_cache = {}
+
     def save_session(self):
-        # Get the text from the widget and check if the last character is a newline and remove it if present
         text = self.text_widget.get("1.0", tk.END).rstrip("\n")
         session_data = {"text": text}
         with open("session.json", "w") as f:
@@ -104,7 +102,6 @@ class TextGeneratorApp:
                 self.text_widget.insert(tk.END, session_data.get("text", ""))
 
     def on_close(self):
-        # Save the session when the window is closed
         self.save_session()
         self.root.destroy()
 
@@ -129,12 +126,10 @@ class TextGeneratorApp:
         self.setup_advanced_options(control_frame)
 
         if config['USE_TTS']:
-            # Add audio toggle checkbox
             self.audio_toggle_var = tk.BooleanVar(value=True)  # Default to audio generation enabled
             self.audio_toggle_checkbox = tk.Checkbutton(control_frame, text="Enable Audio", variable=self.audio_toggle_var)
             self.audio_toggle_checkbox.pack(side='top', pady=5)
 
-        # Font size buttons
         font_size_frame = tk.Frame(self.root)
         font_size_frame.pack(side='bottom', fill='x', padx=10, pady=10, anchor='e')
 
@@ -241,7 +236,6 @@ class TextGeneratorApp:
             self.text_widget.insert(tk.END, "Failed to decode JSON response")
 
         if config['USE_TTS']:
-            # Check if audio generation is enabled
             if self.audio_toggle_var.get():
                 generate_voice(self.last_generated_text)
 
@@ -259,42 +253,55 @@ class TextGeneratorApp:
         self.save_session()
 
     def check_grammar(self):
-        # Get the last 20k characters from the text widget
-        text = self.text_widget.get("1.0", tk.END)[-20000:].strip()
-        results = APIHandler.check_grammar(text)
-        self.display_grammar_errors(results)
+        full_text = self.text_widget.get("1.0", "end-1c")
+        text_to_check = full_text[-20000:]
+        offset = len(full_text) - len(text_to_check)
 
-    def display_grammar_errors(self, results):
+        text_hash = hashlib.md5(text_to_check.encode()).hexdigest()
+        if text_hash in self.grammar_cache:
+            results = self.grammar_cache[text_hash]
+        else:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            results = loop.run_until_complete(APIHandler.check_grammar(text_to_check))
+            loop.close()
+            self.grammar_cache[text_hash] = results
+
+        self.display_grammar_errors(results, offset)
+
+    def display_grammar_errors(self, results, offset):
         self.grammar_errors = []  # Clear previous errors
         self.text_widget.tag_remove('grammar_error', '1.0', tk.END)  # Clear previous highlights
 
         if 'matches' in results:
             for match in results['matches']:
-                offset = match['offset']
-                length = match['length']
-                self.text_widget.tag_add('grammar_error', f"1.0 + {offset} chars", f"1.0 + {offset + length} chars")
+                start_index = self.get_text_widget_index(match['offset'] + offset)
+                end_index = self.get_text_widget_index(match['offset'] + match['length'] + offset)
+
+                print(f"Error: {match['message']}")
+                print(f"Start index: {start_index}, End index: {end_index}")
+
+                self.text_widget.tag_add('grammar_error', start_index, end_index)
                 self.text_widget.tag_config('grammar_error', background='yellow')
-                self.grammar_errors.append((f"1.0 + {offset} chars", f"1.0 + {offset + length} chars", match['message'], match['replacements']))
+                self.grammar_errors.append((start_index, end_index, match['message'], match['replacements']))
+
+    def get_text_widget_index(self, char_index):
+        return self.text_widget.index(f"1.0 + {char_index} chars")
 
     def on_text_click(self, event):
-        # Get the position of the click
         index = self.text_widget.index(f"@{event.x},{event.y}")
 
-        # Check if the click is on a highlighted error
         for start, end, message, replacements in self.grammar_errors:
-            if self.text_widget.compare(index, ">=", start) and self.text_widget.compare(index, "<=", end):
+            if self.text_widget.compare(index, ">=", start) and self.text_widget.compare(index, "<", end):
                 self.show_suggestions_popup(start, end, message, replacements)
                 break
 
     def show_suggestions_popup(self, start, end, message, replacements):
-        # Create a new window for the suggestions popup
         popup = tk.Toplevel(self.root)
         popup.title("Grammar Suggestions")
 
-        # Display the error message
         tk.Label(popup, text=message, wraplength=400).pack(pady=10)
 
-        # Display the suggestions
         for replacement in replacements:
             suggestion = replacement['value']
             button = tk.Button(popup, text=suggestion, command=lambda s=suggestion: self.apply_suggestion(start, end, s))
