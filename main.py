@@ -245,7 +245,6 @@ class TextGeneratorApp:
         try:
             response = APIHandler.generate_text(data)
             response.raise_for_status()
-
             client = sseclient.SSEClient(response)
             self.last_generated_text = ""
             for event in client.events():
@@ -253,15 +252,21 @@ class TextGeneratorApp:
                     break
                 if event.data:
                     try:
+                        if event.data.strip() == '[DONE]':
+                            break
                         payload = json.loads(event.data)
-                        chunk = payload['choices'][0]['text']
-                        self.last_generated_text += chunk
-                        self.text_widget.insert(tk.END, chunk, 'highlight')  # Tag new text
-                        self.text_widget.tag_config('highlight', foreground='blue')  # Style the tag
-                        self.text_widget.see(tk.END)
+                        if 'text' in payload['choices'][0]:
+                            chunk = payload['choices'][0]['text']
+                            self.last_generated_text += chunk
+                            self.text_widget.insert(tk.END, chunk, 'highlight')  # Tag new text
+                            self.text_widget.tag_config('highlight', foreground='blue')  # Style the tag
+                            self.text_widget.see(tk.END)
+                        elif 'finish_reason' in payload['choices'][0]:
+                            print(f"Text generation finished. Reason: {payload['choices'][0]['finish_reason']}")
                     except (json.JSONDecodeError, KeyError) as error:
                         print(error)
                         pass
+
         except requests.exceptions.Timeout:
             self.text_widget.insert(tk.END, "The request timed out")
         except json.JSONDecodeError:
