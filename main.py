@@ -10,6 +10,12 @@ with open("config.json", "r") as f:
 if config['USE_TTS']:
     from generate_voice import generate_voice, stop_audio
 
+def load_presets():
+    if os.path.exists("presets.json"):
+        with open("presets.json", "r") as f:
+            return json.load(f)
+    return {}
+
 class Button:
     def __init__(self, master, text, command, side='top', padx=5, pady=5):
         self.button = tk.Button(master, text=text, command=command)
@@ -86,6 +92,9 @@ class TextGeneratorApp:
         self.fetch_models()
         self.load_session()
 
+        self.presets = load_presets()
+        self.update_preset_dropdown()
+
         self.grammar_cache = {}
 
     def save_session(self):
@@ -151,6 +160,18 @@ class TextGeneratorApp:
 
         self.advanced_options = tk.Frame(self.advanced_frame)
 
+        # Presets Dropdown
+        self.preset_label = tk.Label(self.advanced_options, text="Presets:")
+        self.preset_label.pack(side='top', anchor='w')
+        self.preset_var = tk.StringVar(value="")
+        self.preset_dropdown = ttk.Combobox(self.advanced_options, textvariable=self.preset_var, state="readonly")
+        self.preset_dropdown.pack(side='top', fill='x')
+        self.preset_dropdown.bind("<<ComboboxSelected>>", self.apply_preset)
+
+        # Load presets into the dropdown
+        self.presets = load_presets()
+        self.preset_dropdown['values'] = list(self.presets.keys())
+
         self.model_label = tk.Label(self.advanced_options, text="Model:")
         self.model_label.pack(side='top', anchor='w')
         self.model_var = tk.StringVar(value="L3-70B-Euryale-v2.1")
@@ -166,6 +187,17 @@ class TextGeneratorApp:
             "repetition_penalty": ParameterInput(self.advanced_options, "Repetition Penalty:", 1.0),
             "presence_penalty": ParameterInput(self.advanced_options, "Presence Penalty:", 0.5)
         }
+
+    def apply_preset(self, event):
+        preset_name = self.preset_var.get()
+        if preset_name in self.presets:
+            preset = self.presets[preset_name]
+            for param, value in preset.items():
+                if param in self.parameters:
+                    self.parameters[param].var.set(value)
+
+    def update_preset_dropdown(self):
+        self.preset_dropdown['values'] = list(self.presets.keys())
 
     def setup_variables(self):
         self.cancel_requested = False
