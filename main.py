@@ -336,14 +336,15 @@ class TextGeneratorApp:
 
         for replacement in replacements:
             suggestion = replacement['value']
-            button = tk.Button(popup, text=suggestion, command=lambda s=suggestion: self.apply_suggestion(start, end, s))
+            button = tk.Button(popup, text=suggestion, command=lambda s=suggestion, p=popup: self.apply_suggestion(start, end, s, p))
             button.pack(fill='x', padx=10, pady=5)
 
-    def apply_suggestion(self, start, end, suggestion):
+    def apply_suggestion(self, start, end, suggestion, popup):
         self.text_widget.delete(start, end)
         self.text_widget.insert(start, suggestion)
         self.text_widget.tag_remove('grammar_error', start, end)
         self.save_session()
+        popup.destroy()
 
     def update_model_dropdown(self, models):
         sorted_models = sorted(models)
