@@ -1,8 +1,6 @@
-import asyncio
-import json
+import asyncio,threading
+import json,re
 import pygame
-import re
-import threading
 
 from novelai_python import VoiceGenerate, JwtCredential, APIError
 from novelai_python.sdk.ai.generate_voice import VoiceSpeakerV2, VoiceSpeakerV1
@@ -19,7 +17,6 @@ audio_playback_active = threading.Event()
 with open("config.json", "r") as f:
     config = json.load(f)
     jwt = config.get("NOVELAI_API_KEY")
-
 
 async def generate_voice_async(text: str):
     credential = JwtCredential(jwt_token=SecretStr(jwt))
@@ -40,7 +37,6 @@ async def generate_voice_async(text: str):
             f.write(file)
     return "generate_voice.mp3"
 
-
 def treat_text(text: str) -> str:
     """
     Removes all asterisks ('*') from the input text.
@@ -48,13 +44,11 @@ def treat_text(text: str) -> str:
     treated_text = re.sub(r'\*', '', text)
     return treated_text
 
-
 def split_text(text: str, max_length: int = 1000) -> list:
     """
     Splits the text into chunks of a specified maximum length.
     """
     return [text[i:i + max_length] for i in range(0, len(text), max_length)]
-
 
 async def generate_and_play_voice(text: str):
     chunks = split_text(treat_text(text))
@@ -69,18 +63,15 @@ async def generate_and_play_voice(text: str):
                 await asyncio.sleep(0.1)
             sound.stop()
 
-
 def generate_voice(text: str):
     audio_playback_active.set()  # Set the flag when playback starts
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(generate_and_play_voice(text))
 
-
 def stop_audio():
     audio_playback_active.clear()
 
-
 # This part is only executed when the script is run directly
 if __name__ == "__main__":
-    generate_voice("Sweetheart... did you make a mess again?")
+    generate_voice("Sweetheart...")
