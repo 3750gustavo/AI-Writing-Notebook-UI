@@ -23,11 +23,10 @@ with open("config.json", "r") as f:
 
 async def generate_voice_async(text: str):
     credential = JwtCredential(jwt_token=SecretStr(jwt))
-    print(f"VoiceSpeakerV2 List:{enum_to_list(VoiceSpeakerV2)}")
     try:
         voice_gen = VoiceGenerate.build(
             text=text,
-            voice_engine=VoiceSpeakerV1.Crina,  # VoiceSpeakerV2.Ligeia,
+            voice_engine=VoiceSpeakerV1.Crina,
         )
         result = await voice_gen.request(
             session=credential
@@ -36,11 +35,10 @@ async def generate_voice_async(text: str):
         print(f"Error: {e.message}")
         return None
     else:
-        print(f"Meta: {result.meta}")
-    file = result.audio
-    with open("generate_voice.mp3", "wb") as f:
-        f.write(file)
-    print("Voice generated successfully")
+        file = result.audio
+        with open("generate_voice.mp3", "wb") as f:
+            f.write(file)
+    return "generate_voice.mp3"
 
 
 def treat_text(text: str) -> str:
@@ -51,22 +49,32 @@ def treat_text(text: str) -> str:
     return treated_text
 
 
+def split_text(text: str, max_length: int = 1000) -> list:
+    """
+    Splits the text into chunks of a specified maximum length.
+    """
+    return [text[i:i + max_length] for i in range(0, len(text), max_length)]
+
+
 async def generate_and_play_voice(text: str):
-    await generate_voice_async(text)
-    sound = pygame.mixer.Sound("generate_voice.mp3")
-    audio_playback_active.set()  # Set the flag when playback starts
-    sound.play()
-    while pygame.mixer.get_busy() and audio_playback_active.is_set():
-        await asyncio.sleep(0.1)
-    sound.stop()  # Stop the sound if the loop breaks
-    audio_playback_active.clear()  # Clear the flag when playback ends
+    chunks = split_text(treat_text(text))
+    for chunk in chunks:
+        if not audio_playback_active.is_set():
+            break
+        audio_file = await generate_voice_async(chunk)
+        if audio_file:
+            sound = pygame.mixer.Sound(audio_file)
+            sound.play()
+            while pygame.mixer.get_busy() and audio_playback_active.is_set():
+                await asyncio.sleep(0.1)
+            sound.stop()
 
 
 def generate_voice(text: str):
-    treated_text = treat_text(text)
+    audio_playback_active.set()  # Set the flag when playback starts
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    return loop.run_until_complete(generate_and_play_voice(treated_text))
+    loop.run_until_complete(generate_and_play_voice(text))
 
 
 def stop_audio():
