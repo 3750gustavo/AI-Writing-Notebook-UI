@@ -128,8 +128,8 @@ class TextGeneratorApp:
         self.buttons = {
             'generate': Button(button_frame, "Generate", self.start_generation, side='left'),
             'cancel': Button(button_frame, "Cancel", self.cancel_generation, side='left'),
-            'retry': Button(button_frame, "Retry", self.retry_generation, side='left'),
-            'undo': Button(button_frame, "Undo", self.undo_generation, side='left')
+            'retry': Button(button_frame, "Retry", lambda: self.retry_or_undo_generation('retry'), side='left'),
+            'undo': Button(button_frame, "Undo", lambda: self.retry_or_undo_generation('undo'), side='left')
         }
 
         self.setup_advanced_options(control_frame)
@@ -278,16 +278,17 @@ class TextGeneratorApp:
 
         self.save_session()
 
-    def retry_generation(self):
-        self.cancel_requested = False
+    def retry_or_undo_generation(self, action):
+        if action == 'retry':
+            self.cancel_requested = False
         self.text_widget.delete("1.0", tk.END)
         self.text_widget.insert(tk.END, self.last_prompt)
-        self.start_generation()
-
-    def undo_generation(self):
-        self.text_widget.delete("1.0", tk.END)
-        self.text_widget.insert(tk.END, self.last_prompt)
-        self.save_session()
+        if config['USE_TTS']:
+            stop_audio()
+        if action == 'retry':
+            self.start_generation()
+        else:
+            self.save_session()
 
     def check_grammar(self):
         full_text = self.text_widget.get("1.0", "end-1c")
