@@ -88,5 +88,23 @@
         "min_p": 0.08,
         "repetition_penalty": 1.00,
         "presence_penalty": 0.0
+    },
+    "Qwen2_Starchat": {
+        "max_tokens": 512,
+        "temperature": 0.02,
+        "top_p": 0.95,
+        "top_k": -1,
+        "min_p": 0.00,
+        "repetition_penalty": 1.0,
+        "presence_penalty": 0.91
+    },
+    "Starchat": {
+        "max_tokens": 222,
+        "temperature": 0.02,
+        "top_p": 0.98,
+        "top_k": -1,
+        "min_p": 0.02,
+        "repetition_penalty": 1.01,
+        "presence_penalty": 0.91
     }
 }
