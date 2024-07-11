@@ -1,0 +1,5 @@
+{
+    "INFERMATIC_API_KEY": "your_api_key_here",
+    "USE_TTS": false,
+    "NOVELAI_API_KEY": "your_novelai_key_here"
+}

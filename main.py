@@ -1,8 +1,8 @@
-import os,json,hashlib
-import threading,asyncio
+import os, json, hashlib
+import threading, asyncio
 import tkinter as tk
 from tkinter import ttk, scrolledtext, simpledialog, messagebox
-import requests,sseclient
+import requests, sseclient
 
 with open("config.json", "r") as f:
     config = json.load(f)
@@ -99,7 +99,12 @@ class TextGeneratorApp:
 
     def save_session(self):
         text = self.text_widget.get("1.0", tk.END).rstrip("\n")
-        session_data = {"text": text}
+        session_data = {
+            "text": text,
+            "memory": getattr(self, 'memory_text', ''),
+            "author_notes": getattr(self, 'author_notes_text', ''),
+            "lorebook": getattr(self, 'lorebook_text', '')
+        }
         with open("session.json", "w") as f:
             json.dump(session_data, f)
 
@@ -109,6 +114,9 @@ class TextGeneratorApp:
                 session_data = json.load(f)
                 self.text_widget.delete("1.0", tk.END)
                 self.text_widget.insert(tk.END, session_data.get("text", ""))
+                self.memory_text = session_data.get("memory", "")
+                self.author_notes_text = session_data.get("author_notes", "")
+                self.lorebook_text = session_data.get("lorebook", "")
 
     def on_close(self):
         self.save_session()
@@ -374,39 +382,34 @@ class TextGeneratorApp:
         tk.Label(popup, text="Memory:").pack(anchor='w')
         self.memory_entry = scrolledtext.ScrolledText(popup, wrap='word', width=50, height=10)
         self.memory_entry.pack(fill='x', padx=10, pady=5)
+        self.memory_entry.insert(tk.END, getattr(self, 'memory_text', ''))
 
         tk.Label(popup, text="Author Notes:").pack(anchor='w')
         self.authornotes_entry = scrolledtext.ScrolledText(popup, wrap='word', width=50, height=10)
         self.authornotes_entry.pack(fill='x', padx=10, pady=5)
+        self.authornotes_entry.insert(tk.END, getattr(self, 'author_notes_text', ''))
 
         tk.Label(popup, text="Lorebook:").pack(anchor='w')
         self.lorebook_entry = tk.Entry(popup, width=50)
         self.lorebook_entry.pack(fill='x', padx=10, pady=5)
+        self.lorebook_entry.insert(tk.END, getattr(self, 'lorebook_text', ''))
 
-        tk.Button(popup, text="Save", command=lambda: self.save_story_info(popup)).pack(pady=10)
+        popup.protocol("WM_DELETE_WINDOW", lambda: self.on_close_story_info(popup))
 
-
-    def save_story_info(self, popup):
+    def on_close_story_info(self, popup):
         # Retrieve the values from the entries and do something with them
-        memory = self.memory_entry.get()
-        authornotes = self.authornotes_entry.get()
-        lorebook = self.lorebook_entry.get()
+        self.memory_text = self.memory_entry.get("1.0", tk.END).rstrip("\n")
+        self.author_notes_text = self.authornotes_entry.get("1.0", tk.END).rstrip("\n")
+        self.lorebook_text = self.lorebook_entry.get().rstrip("\n")
 
-        print(f"Memory: {memory}")
-        print(f"Author Notes: {authornotes}")
-        print(f"Lorebook: {lorebook}")
+        print(f"Memory: {self.memory_text}")
+        print(f"Author Notes: {self.author_notes_text}")
+        print(f"Lorebook: {self.lorebook_text}")
         
-        # Save it to session.json
-        self.story_info_values = {
-            "memory": memory,
-            "authornotes": authornotes,
-            "lorebook": lorebook
-        }
+        self.save_session()
 
         # Close the popup window
         popup.destroy()
-
-
 
 if __name__ == "__main__":
     root = tk.Tk()
