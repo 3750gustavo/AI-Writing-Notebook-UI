@@ -129,7 +129,8 @@ class TextGeneratorApp:
             'generate': Button(button_frame, "Generate", self.start_generation, side='left'),
             'cancel': Button(button_frame, "Cancel", self.cancel_generation, side='left'),
             'retry': Button(button_frame, "Retry", lambda: self.retry_or_undo_generation('retry'), side='left'),
-            'undo': Button(button_frame, "Undo", lambda: self.retry_or_undo_generation('undo'), side='left')
+            'undo': Button(button_frame, "Undo", lambda: self.retry_or_undo_generation('undo'), side='left'),
+            'info': Button(button_frame, "Story Info", lambda: self.story_info(), side='left'),
         }
 
         self.setup_advanced_options(control_frame)
@@ -365,6 +366,47 @@ class TextGeneratorApp:
     def decrease_font_size(self):
         self.font_size = max(8, self.font_size - 2)
         self.text_widget.config(font=("TkDefaultFont", self.font_size))
+
+    def story_info(self):
+        popup = tk.Toplevel(self.root)
+        popup.title("Story Information")
+
+        tk.Label(popup, text="Memory:").pack(anchor='w')
+        self.memory_entry = scrolledtext.ScrolledText(popup, wrap='word', width=50, height=10)
+        self.memory_entry.pack(fill='x', padx=10, pady=5)
+
+        tk.Label(popup, text="Author Notes:").pack(anchor='w')
+        self.authornotes_entry = scrolledtext.ScrolledText(popup, wrap='word', width=50, height=10)
+        self.authornotes_entry.pack(fill='x', padx=10, pady=5)
+
+        tk.Label(popup, text="Lorebook:").pack(anchor='w')
+        self.lorebook_entry = tk.Entry(popup, width=50)
+        self.lorebook_entry.pack(fill='x', padx=10, pady=5)
+
+        tk.Button(popup, text="Save", command=lambda: self.save_story_info(popup)).pack(pady=10)
+
+
+    def save_story_info(self, popup):
+        # Retrieve the values from the entries and do something with them
+        memory = self.memory_entry.get()
+        authornotes = self.authornotes_entry.get()
+        lorebook = self.lorebook_entry.get()
+
+        print(f"Memory: {memory}")
+        print(f"Author Notes: {authornotes}")
+        print(f"Lorebook: {lorebook}")
+        
+        # Save it to session.json
+        self.story_info_values = {
+            "memory": memory,
+            "authornotes": authornotes,
+            "lorebook": lorebook
+        }
+
+        # Close the popup window
+        popup.destroy()
+
+
 
 if __name__ == "__main__":
     root = tk.Tk()
