@@ -112,7 +112,7 @@ class TextGeneratorApp:
         if not os.path.exists("session.json"):
             with open("session.json", "w") as f:
                 json.dump({"text": "", "memory": "", "author_notes": "", "lorebook_entries": {}}, f)
-
+    
         try:
             with open("session.json", "r") as f:
                 session_data = json.load(f)
@@ -122,12 +122,8 @@ class TextGeneratorApp:
                 self.author_notes_text = session_data.get("author_notes", "")
                 self.lorebook_entries_data = session_data.get("lorebook_entries", {})
         except (json.JSONDecodeError, KeyError) as e:
-            print(f"Error loading session data: {e}")
-            self.text_widget.delete("1.0", tk.END)
-            self.text_widget.insert(tk.END, "")
-            self.memory_text = ""
-            self.author_notes_text = ""
-            self.lorebook_entries_data = {}
+            messagebox.showerror("Session Load Error", str(e))
+            self.root.destroy()
 
     def on_close(self):
         self.save_session()
