@@ -1,8 +1,8 @@
-import os, json, hashlib
-import threading, asyncio
+import os,json,hashlib
+import threading,asyncio
 import tkinter as tk
 from tkinter import ttk, scrolledtext, simpledialog, messagebox
-import requests, sseclient
+import requests,sseclient
 
 with open("config.json", "r") as f:
     config = json.load(f)
