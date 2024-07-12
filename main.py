@@ -99,16 +99,31 @@ class TextGeneratorApp:
 
     def save_session(self):
         text = self.text_widget.get("1.0", tk.END).rstrip("\n")
-        session_data = {"text": text}
+        session_data = {
+            "text": text,
+            "memory": getattr(self, 'memory_text', ''),
+            "author_notes": getattr(self, 'author_notes_text', ''),
+            "lorebook_entries": getattr(self, 'lorebook_entries_data', {})
+        }
         with open("session.json", "w") as f:
             json.dump(session_data, f)
 
     def load_session(self):
-        if os.path.exists("session.json"):
+        if not os.path.exists("session.json"):
+            with open("session.json", "w") as f:
+                json.dump({"text": "", "memory": "", "author_notes": "", "lorebook_entries": {}}, f)
+    
+        try:
             with open("session.json", "r") as f:
                 session_data = json.load(f)
                 self.text_widget.delete("1.0", tk.END)
                 self.text_widget.insert(tk.END, session_data.get("text", ""))
+                self.memory_text = session_data.get("memory", "")
+                self.author_notes_text = session_data.get("author_notes", "")
+                self.lorebook_entries_data = session_data.get("lorebook_entries", {})
+        except (json.JSONDecodeError, KeyError) as e:
+            messagebox.showerror("Session Load Error", str(e))
+            self.root.destroy()
 
     def on_close(self):
         self.save_session()
@@ -129,7 +144,8 @@ class TextGeneratorApp:
             'generate': Button(button_frame, "Generate", self.start_generation, side='left'),
             'cancel': Button(button_frame, "Cancel", self.cancel_generation, side='left'),
             'retry': Button(button_frame, "Retry", lambda: self.retry_or_undo_generation('retry'), side='left'),
-            'undo': Button(button_frame, "Undo", lambda: self.retry_or_undo_generation('undo'), side='left')
+            'undo': Button(button_frame, "Undo", lambda: self.retry_or_undo_generation('undo'), side='left'),
+            'info': Button(button_frame, "Story Info", lambda: self.story_info(), side='left'),
         }
 
         self.setup_advanced_options(control_frame)
@@ -365,6 +381,93 @@ class TextGeneratorApp:
     def decrease_font_size(self):
         self.font_size = max(8, self.font_size - 2)
         self.text_widget.config(font=("TkDefaultFont", self.font_size))
+
+    def story_info(self):
+        popup = tk.Toplevel(self.root)
+        popup.title("Story Information")
+
+        tk.Label(popup, text="Memory:").pack(anchor='w')
+        self.memory_entry = scrolledtext.ScrolledText(popup, wrap='word', width=50, height=10)
+        self.memory_entry.pack(fill='x', padx=10, pady=5)
+        self.memory_entry.insert(tk.END, getattr(self, 'memory_text', ''))
+
+        tk.Label(popup, text="Author Notes:").pack(anchor='w')
+        self.authornotes_entry = scrolledtext.ScrolledText(popup, wrap='word', width=50, height=10)
+        self.authornotes_entry.pack(fill='x', padx=10, pady=5)
+        self.authornotes_entry.insert(tk.END, getattr(self, 'author_notes_text', ''))
+
+        tk.Label(popup, text="Lorebook Entries:").pack(anchor='w')
+
+        lorebook_canvas = tk.Canvas(popup)
+        lorebook_canvas.pack(side='left', fill='both', expand=True)
+
+        scrollbar = ttk.Scrollbar(popup, orient="vertical", command=lorebook_canvas.yview)
+        scrollbar.pack(side='right', fill='y')
+
+        self.lorebook_frame = tk.Frame(lorebook_canvas)
+        lorebook_canvas.create_window((0, 0), window=self.lorebook_frame, anchor='nw')
+        lorebook_canvas.configure(yscrollcommand=scrollbar.set)
+
+        self.add_lorebook_button = tk.Button(popup, text="New Entry", command=self.add_lorebook_entry)
+        self.add_lorebook_button.pack(pady=10)
+
+        self.lorebook_entries_widgets = []
+        self.load_lorebook_entries()
+
+        popup.protocol("WM_DELETE_WINDOW", lambda: self.save_story_info(popup))
+        self.lorebook_frame.bind("<Configure>", lambda e: lorebook_canvas.configure(scrollregion=lorebook_canvas.bbox("all")))
+
+    def add_lorebook_entry(self):
+        entry_id = len(self.lorebook_entries_widgets) + 1
+        entry_frame = tk.Frame(self.lorebook_frame)
+        entry_frame.pack(fill='x', pady=5)
+
+        tk.Label(entry_frame, text=f"Entry #{entry_id}").pack(anchor='w')
+
+        tk.Label(entry_frame, text="Name:").pack(anchor='w')
+        name_entry = scrolledtext.ScrolledText(entry_frame, wrap='word', width=50, height=2)
+        name_entry.pack(fill='x', padx=10, pady=5)
+
+        tk.Label(entry_frame, text="Content:").pack(anchor='w')
+        content_entry = scrolledtext.ScrolledText(entry_frame, wrap='word', width=50, height=10)
+        content_entry.pack(fill='x', padx=10, pady=5)
+
+        self.lorebook_entries_widgets.append((entry_frame, name_entry, content_entry))
+
+    def load_lorebook_entries(self):
+        self.lorebook_entries_widgets = []
+        if hasattr(self, 'lorebook_entries_data'):
+            for idx, (name, content) in enumerate(self.lorebook_entries_data.items(), start=1):
+                entry_frame = tk.Frame(self.lorebook_frame)
+                entry_frame.pack(fill='x', pady=5)
+
+                tk.Label(entry_frame, text=f"Entry #{idx}").pack(anchor='w')
+
+                tk.Label(entry_frame, text="Name:").pack(anchor='w')
+                name_entry = scrolledtext.ScrolledText(entry_frame, wrap='word', width=50, height=2)
+                name_entry.pack(fill='x', padx=10, pady=5)
+                name_entry.insert(tk.END, name)
+
+                tk.Label(entry_frame, text="Content:").pack(anchor='w')
+                content_entry = scrolledtext.ScrolledText(entry_frame, wrap='word', width=50, height=10)
+                content_entry.pack(fill='x', padx=10, pady=5)
+                content_entry.insert(tk.END, content)
+
+                self.lorebook_entries_widgets.append((entry_frame, name_entry, content_entry))
+
+    def save_story_info(self, popup):
+        self.memory_text = self.memory_entry.get("1.0", tk.END).rstrip("\n")
+        self.author_notes_text = self.authornotes_entry.get("1.0", tk.END).rstrip("\n")
+
+        self.lorebook_entries_data = {}
+        for _, name_entry, content_entry in self.lorebook_entries_widgets:
+            name = name_entry.get("1.0", tk.END).strip()
+            content = content_entry.get("1.0", tk.END).strip()
+            if name and content:
+                self.lorebook_entries_data[name] = content
+
+        self.save_session()
+        popup.destroy()
 
 if __name__ == "__main__":
     root = tk.Tk()
