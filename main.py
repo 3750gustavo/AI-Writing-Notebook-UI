@@ -12,8 +12,12 @@ if config['USE_TTS']:
 
 def load_presets():
     if os.path.exists("presets.json"):
-        with open("presets.json", "r") as f:
-            return json.load(f)
+        try:
+            with open("presets.json", "r") as f:
+                return json.load(f)
+        except json.JSONDecodeError as e:
+            print(f'Error on presets.json file: {e}')
+            return {}
     return {}
 
 class Button:
