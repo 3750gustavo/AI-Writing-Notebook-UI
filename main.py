@@ -223,20 +223,22 @@ class TextGeneratorApp:
 
     def create_preset(self):
         preset_name = simpledialog.askstring("New Preset", "Enter a name for the new preset:")
-        if preset_name:
-            if preset_name in self.presets:
-                messagebox.showerror("Error", "A preset with this name already exists.")
-                return
+        if not preset_name:
+            return  # User cancelled the dialog
 
-            new_preset = {}
-            for param, input_widget in self.parameters.items():
-                new_preset[param] = input_widget.get()
+        if preset_name in self.presets:
+            messagebox.showerror("Error", "A preset with this name already exists.")
+            return
 
-            self.presets[preset_name] = new_preset
-            self.save_presets()
-            self.update_preset_dropdown()
-            self.preset_var.set(preset_name)
-            messagebox.showinfo("Success", f"Preset '{preset_name}' created successfully.")
+        new_preset = {}
+        for param, input_widget in self.parameters.items():
+            new_preset[param] = input_widget.get()
+
+        self.presets[preset_name] = new_preset
+        self.save_presets()
+        self.update_preset_dropdown()
+        self.preset_var.set(preset_name)
+        messagebox.showinfo("Success", f"Preset '{preset_name}' created successfully.")
 
     def save_preset(self):
         preset_name = self.preset_var.get()
