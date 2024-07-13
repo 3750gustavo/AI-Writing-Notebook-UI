@@ -3,6 +3,7 @@ import threading,asyncio
 import tkinter as tk
 from tkinter import ttk, scrolledtext, simpledialog, messagebox
 import requests,sseclient
+import re
 
 with open("config.json", "r") as f:
     config = json.load(f)
@@ -122,6 +123,7 @@ class TextGeneratorApp:
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)  # Register the close event handler
         self.root.title("AI Writing Notebook UI")
 
+        self.lorebook_entries_widgets = []
         self.preset_manager = PresetManager("presets.json")
         self.setup_ui()
         self.setup_variables()
@@ -174,14 +176,13 @@ class TextGeneratorApp:
 
     def setup_ui(self):
         self.text_widget = scrolledtext.ScrolledText(self.root, wrap='word', width=60, height=20)
-        self.text_widget.pack(expand=True, fill='both', side='left', padx=10, pady=10)
-        self.text_widget.bind("<Button-1>", self.on_text_click)  # Bind click event
+        self.text_widget.pack(fill='both', expand=True, side='left', padx=10, pady=10)
 
         control_frame = tk.Frame(self.root)
-        control_frame.pack(side='right', fill='y', pady=10)
+        control_frame.pack(fill='y', padx=10, pady=10)
 
         button_frame = tk.Frame(control_frame)
-        button_frame.pack(side='top', fill='x', pady=10)
+        button_frame.pack(fill='x', pady=10)
 
         self.buttons = {
             'generate': Button(button_frame, "Generate", self.start_generation, side='left'),
@@ -194,19 +195,18 @@ class TextGeneratorApp:
         self.setup_advanced_options(control_frame)
 
         if config['USE_TTS']:
-            self.audio_toggle_var = tk.BooleanVar(value=True)  # Default to audio generation enabled
+            self.audio_toggle_var = tk.BooleanVar(value=True)
             self.audio_toggle_checkbox = tk.Checkbutton(control_frame, text="Enable Audio", variable=self.audio_toggle_var)
-            self.audio_toggle_checkbox.pack(side='top', pady=5)
+            self.audio_toggle_checkbox.pack(fill='x', pady=5)
 
         font_size_frame = tk.Frame(self.root)
-        font_size_frame.pack(side='bottom', fill='x', padx=10, pady=10, anchor='e')
-
-        self.font_size = 12  # Default font size
-        self.text_widget.config(font=("TkDefaultFont", self.font_size))
+        font_size_frame.pack(fill='x', side='bottom', padx=10, pady=(0, 10))
 
         tk.Button(font_size_frame, text="Check Grammar", command=self.check_grammar).pack(side='right')
         tk.Button(font_size_frame, text="+", command=self.increase_font_size).pack(side='right')
         tk.Button(font_size_frame, text="-", command=self.decrease_font_size).pack(side='right')
+        # Add the Context Viewer button next to the Check Grammar button
+        self.buttons['context_viewer'] = Button(font_size_frame, "Context Viewer", self.show_context_viewer, side='right')
 
     def setup_advanced_options(self, parent):
         self.advanced_frame = tk.Frame(parent)
@@ -327,6 +327,46 @@ class TextGeneratorApp:
         self.last_generated_text = ""
         self.grammar_errors = []  # Store grammar errors
 
+    def prepare_prompt(self, prompt):
+        memory_text = getattr(self, 'memory_text', '')
+        author_notes_text = getattr(self, 'author_notes_text', '')
+        lorebook_entries = self.lorebook_entries_widgets
+
+        if lorebook_entries:
+            lorebook_text = "\n\n".join(
+                f"Entry {idx+1}: {name_entry.get('1.0', tk.END).strip()}\n{content_entry.get('1.0', tk.END).strip()}"
+                for idx, (_, name_entry, content_entry) in enumerate(lorebook_entries)
+                if name_entry.get('1.0', tk.END).strip() and content_entry.get('1.0', tk.END).strip()
+            )
+        else:
+            lorebook_text = ""
+
+        if memory_text:
+            prompt = memory_text + "\n\n" + lorebook_text + "\n\n" + prompt
+        else:
+            prompt = lorebook_text + "\n\n" + prompt
+
+        if author_notes_text:
+            paragraphs = re.split(r'(?<=[.!?])\s+', prompt)
+            prompt = '\n'.join([author_notes_text] + paragraphs)
+
+        return prompt
+
+    def show_context_viewer(self):
+        context_prompt = self.prepare_prompt(self.text_widget.get("1.0", tk.END).strip())
+
+        popup = tk.Toplevel(self.root)
+        popup.title("Context Viewer")
+        popup.geometry("600x400")  # You can adjust the size as needed
+
+        context_text = scrolledtext.ScrolledText(popup, wrap='word', width=80, height=20)
+        context_text.pack(expand=True, fill='both', side='left', padx=10, pady=10)
+        context_text.insert(tk.END, context_prompt)
+        context_text.configure(state='disabled')  # Make the text read-only
+
+        close_button = tk.Button(popup, text="Close", command=popup.destroy)
+        close_button.pack(side='bottom')
+
     def toggle_advanced_options(self):
         if self.show_advanced.get():
             self.advanced_options.pack(side='top', fill='x', pady=10)
@@ -344,10 +384,12 @@ class TextGeneratorApp:
         threading.Thread(target=fetch).start()
 
     def start_generation(self):
-        self.last_prompt = self.text_widget.get("1.0", tk.END).strip()
+        raw_prompt = self.text_widget.get("1.0", tk.END).strip()
+        self.last_prompt = raw_prompt
+        prepared_prompt = self.prepare_prompt(raw_prompt)
         self.cancel_requested = False
-        self.text_widget.tag_remove('highlight', '1.0', tk.END)  # Reset color
-        threading.Thread(target=self.generate_text, args=(self.last_prompt,)).start()
+        self.text_widget.tag_remove('highlight', '1.0', tk.END)
+        threading.Thread(target=self.generate_text, args=(prepared_prompt,)).start()
         self.save_session()
 
     def cancel_generation(self):
