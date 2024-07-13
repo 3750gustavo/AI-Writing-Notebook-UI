@@ -263,8 +263,12 @@ class TextGeneratorApp:
             messagebox.showinfo("Success", f"Preset '{preset_name}' deleted successfully.")
 
     def save_presets(self):
-        with open("presets.json", "w") as f:
-            json.dump(self.presets, f, indent=4)
+        try:
+            with open("presets.json", "w") as f:
+                json.dump(self.presets, f, indent=4)
+        except OSError as e:
+            error_message = os.strerror(e.errno)
+            messagebox.showerror("Error", f"Failed to save presets: {error_message}")
 
     def apply_preset(self, event=None):
         preset_name = self.preset_var.get()
