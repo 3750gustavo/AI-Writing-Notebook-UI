@@ -109,8 +109,11 @@ class TextGeneratorApp:
             "author_notes": getattr(self, 'author_notes_text', ''),
             "lorebook_entries": getattr(self, 'lorebook_entries_data', {})
         }
-        with open("session.json", "w") as f:
-            json.dump(session_data, f)
+        try:
+            with open("session.json", "w") as f:
+                json.dump(session_data, f)
+        except IOError as e:
+            messagebox.showerror("Error", f"Failed to save session: {e}")
 
     def load_session(self):
         if not os.path.exists("session.json"):
@@ -127,6 +130,9 @@ class TextGeneratorApp:
                 self.lorebook_entries_data = session_data.get("lorebook_entries", {})
         except (json.JSONDecodeError, KeyError) as e:
             messagebox.showerror("Session Load Error", str(e))
+            self.root.destroy()
+        except IOError as e:
+            messagebox.showerror("Error", f"Failed to load session: {e}")
             self.root.destroy()
 
     def on_close(self):
