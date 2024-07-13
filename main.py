@@ -10,16 +10,6 @@ with open("config.json", "r") as f:
 if config['USE_TTS']:
     from generate_voice import generate_voice, stop_audio
 
-def load_presets():
-    if os.path.exists("presets.json"):
-        try:
-            with open("presets.json", "r") as f:
-                return json.load(f)
-        except json.JSONDecodeError as e:
-            print(f'Error on presets.json file: {e}')
-            return {}
-    return {}
-
 class Button:
     def __init__(self, master, text, command, side='top', padx=5, pady=5):
         self.button = tk.Button(master, text=text, command=command)
@@ -85,18 +75,61 @@ class APIHandler:
             print(f"Error checking grammar: {e}")
             return {}
 
+class PresetManager:
+    def __init__(self, presets_file):
+        self.presets_file = presets_file
+        self.presets = self.load_presets()
+
+    def load_presets(self):
+        if os.path.exists(self.presets_file):
+            try:
+                with open(self.presets_file, "r") as f:
+                    return json.load(f)
+            except json.JSONDecodeError as e:
+                print(f"Error loading presets from {self.presets_file}: {e}")
+                return {}
+        return {}
+
+    def save_presets(self):
+        try:
+            with open(self.presets_file, "w") as f:
+                json.dump(self.presets, f, indent=4)
+        except OSError as e:
+            error_message = os.strerror(e.errno)
+            print(f"Failed to save presets to {self.presets_file}: {error_message}")
+
+    def get_preset_names(self):
+        return list(self.presets.keys())
+
+    def get_preset(self, preset_name):
+        return self.presets.get(preset_name, {})
+
+    def save_preset(self, preset_name, preset_data):
+        if preset_name in self.presets:
+            self.presets[preset_name] = preset_data
+        else:
+            self.presets[preset_name] = preset_data
+        self.save_presets()
+
+    def delete_preset(self, preset_name):
+        if preset_name in self.presets:
+            del self.presets[preset_name]
+            self.save_presets()
+
 class TextGeneratorApp:
     def __init__(self, root):
         self.root = root
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)  # Register the close event handler
         self.root.title("AI Writing Notebook UI")
 
+        self.preset_manager = PresetManager("presets.json")
         self.setup_ui()
         self.setup_variables()
         self.fetch_models()
         self.load_session()
 
-        self.presets = load_presets()
+        self.preset_manager = PresetManager("presets.json")
+        self.presets = self.preset_manager.get_preset_names()
         self.update_preset_dropdown()
 
         self.grammar_cache = {}
@@ -181,7 +214,7 @@ class TextGeneratorApp:
 
         self.show_advanced = tk.BooleanVar()
         self.advanced_checkbox = tk.Checkbutton(self.advanced_frame, text="Show Advanced Options",
-                                                variable=self.show_advanced, command=self.toggle_advanced_options)
+                                          variable=self.show_advanced, command=self.toggle_advanced_options)
         self.advanced_checkbox.pack(side='top')
 
         self.advanced_options = tk.Frame(self.advanced_frame)
@@ -208,7 +241,7 @@ class TextGeneratorApp:
         self.create_preset_button.pack(side='left', padx=2)
 
         # Load presets into the dropdown
-        self.presets = load_presets()
+        self.presets = self.preset_manager.get_preset_names()
         self.update_preset_dropdown()
 
         self.model_label = tk.Label(self.advanced_options, text="Model:")
@@ -240,8 +273,8 @@ class TextGeneratorApp:
         for param, input_widget in self.parameters.items():
             new_preset[param] = input_widget.get()
 
-        self.presets[preset_name] = new_preset
-        self.save_presets()
+        self.preset_manager.save_preset(preset_name, new_preset)
+        self.presets = self.preset_manager.get_preset_names()
         self.update_preset_dropdown()
         self.preset_var.set(preset_name)
         messagebox.showinfo("Success", f"Preset '{preset_name}' created successfully.")
@@ -252,10 +285,11 @@ class TextGeneratorApp:
             messagebox.showerror("Error", "Please select a preset to save.")
             return
 
+        preset_data = {}
         for param, input_widget in self.parameters.items():
-            self.presets[preset_name][param] = input_widget.get()
+            preset_data[param] = input_widget.get()
 
-        self.save_presets()
+        self.preset_manager.save_preset(preset_name, preset_data)
         messagebox.showinfo("Success", f"Preset '{preset_name}' saved successfully.")
 
     def delete_preset(self):
@@ -265,35 +299,27 @@ class TextGeneratorApp:
             return
 
         if messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete the preset '{preset_name}'?"):
-            del self.presets[preset_name]
-            self.save_presets()
+            self.preset_manager.delete_preset(preset_name)
+            self.presets = self.preset_manager.get_preset_names()
             self.update_preset_dropdown()
             messagebox.showinfo("Success", f"Preset '{preset_name}' deleted successfully.")
 
-    def save_presets(self):
-        try:
-            with open("presets.json", "w") as f:
-                json.dump(self.presets, f, indent=4)
-        except OSError as e:
-            error_message = os.strerror(e.errno)
-            messagebox.showerror("Error", f"Failed to save presets: {error_message}")
+    def update_preset_dropdown(self):
+        self.presets = self.preset_manager.get_preset_names()
+        self.preset_dropdown['values'] = self.presets
+        if self.presets:
+            self.preset_var.set(self.presets[0])
+        else:
+            self.preset_var.set("")
 
     def apply_preset(self, event=None):
         preset_name = self.preset_var.get()
-        if preset_name in self.presets:
-            preset = self.presets[preset_name]
-            for param, value in preset.items():
-                if param in self.parameters and isinstance(value, (int, float)):
-                    self.parameters[param].var.set(value)
-                else:
-                    print(f"Warning: Parameter '{param}' in preset '{preset_name}' is invalid or has an incorrect type.")
-
-    def update_preset_dropdown(self):
-        self.preset_dropdown['values'] = list(self.presets.keys())
-        if self.presets:
-            self.preset_var.set(list(self.presets.keys())[0])
-        else:
-            self.preset_var.set("")
+        preset = self.preset_manager.get_preset(preset_name)
+        for param, value in preset.items():
+            if param in self.parameters and isinstance(value, (int, float)):
+                self.parameters[param].var.set(value)
+            else:
+                print(f"Warning: Parameter '{param}' in preset '{preset_name}' is invalid or has an incorrect type.")
 
     def setup_variables(self):
         self.cancel_requested = False
