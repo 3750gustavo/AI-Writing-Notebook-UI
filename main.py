@@ -275,8 +275,10 @@ class TextGeneratorApp:
         if preset_name in self.presets:
             preset = self.presets[preset_name]
             for param, value in preset.items():
-                if param in self.parameters:
+                if param in self.parameters and isinstance(value, (int, float)):
                     self.parameters[param].var.set(value)
+                else:
+                    print(f"Warning: Parameter '{param}' in preset '{preset_name}' is invalid or has an incorrect type.")
 
     def update_preset_dropdown(self):
         self.preset_dropdown['values'] = list(self.presets.keys())
