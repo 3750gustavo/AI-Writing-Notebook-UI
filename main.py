@@ -112,7 +112,7 @@ class TextGeneratorApp:
         if not os.path.exists("session.json"):
             with open("session.json", "w") as f:
                 json.dump({"text": "", "memory": "", "author_notes": "", "lorebook_entries": {}}, f)
-    
+
         try:
             with open("session.json", "r") as f:
                 session_data = json.load(f)
@@ -176,17 +176,30 @@ class TextGeneratorApp:
 
         self.advanced_options = tk.Frame(self.advanced_frame)
 
-        # Presets Dropdown
-        self.preset_label = tk.Label(self.advanced_options, text="Presets:")
-        self.preset_label.pack(side='top', anchor='w')
+        # Presets Dropdown and Buttons
+        preset_frame = tk.Frame(self.advanced_options)
+        preset_frame.pack(side='top', fill='x', pady=5)
+
+        self.preset_label = tk.Label(preset_frame, text="Presets:")
+        self.preset_label.pack(side='left')
+
         self.preset_var = tk.StringVar(value="")
-        self.preset_dropdown = ttk.Combobox(self.advanced_options, textvariable=self.preset_var, state="readonly")
-        self.preset_dropdown.pack(side='top', fill='x')
+        self.preset_dropdown = ttk.Combobox(preset_frame, textvariable=self.preset_var, state="readonly")
+        self.preset_dropdown.pack(side='left', fill='x', expand=True)
         self.preset_dropdown.bind("<<ComboboxSelected>>", self.apply_preset)
+
+        self.save_preset_button = tk.Button(preset_frame, text="Save", command=self.save_preset)
+        self.save_preset_button.pack(side='left', padx=2)
+
+        self.delete_preset_button = tk.Button(preset_frame, text="Delete", command=self.delete_preset)
+        self.delete_preset_button.pack(side='left', padx=2)
+
+        self.create_preset_button = tk.Button(preset_frame, text="Create", command=self.create_preset)
+        self.create_preset_button.pack(side='left', padx=2)
 
         # Load presets into the dropdown
         self.presets = load_presets()
-        self.preset_dropdown['values'] = list(self.presets.keys())
+        self.update_preset_dropdown()
 
         self.model_label = tk.Label(self.advanced_options, text="Model:")
         self.model_label.pack(side='top', anchor='w')
@@ -204,7 +217,52 @@ class TextGeneratorApp:
             "presence_penalty": ParameterInput(self.advanced_options, "Presence Penalty:", 0.5)
         }
 
-    def apply_preset(self, event):
+    def create_preset(self):
+        preset_name = simpledialog.askstring("New Preset", "Enter a name for the new preset:")
+        if preset_name:
+            if preset_name in self.presets:
+                messagebox.showerror("Error", "A preset with this name already exists.")
+                return
+
+            new_preset = {}
+            for param, input_widget in self.parameters.items():
+                new_preset[param] = input_widget.get()
+
+            self.presets[preset_name] = new_preset
+            self.save_presets()
+            self.update_preset_dropdown()
+            self.preset_var.set(preset_name)
+            messagebox.showinfo("Success", f"Preset '{preset_name}' created successfully.")
+
+    def save_preset(self):
+        preset_name = self.preset_var.get()
+        if not preset_name:
+            messagebox.showerror("Error", "Please select a preset to save.")
+            return
+
+        for param, input_widget in self.parameters.items():
+            self.presets[preset_name][param] = input_widget.get()
+
+        self.save_presets()
+        messagebox.showinfo("Success", f"Preset '{preset_name}' saved successfully.")
+
+    def delete_preset(self):
+        preset_name = self.preset_var.get()
+        if not preset_name:
+            messagebox.showerror("Error", "Please select a preset to delete.")
+            return
+
+        if messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete the preset '{preset_name}'?"):
+            del self.presets[preset_name]
+            self.save_presets()
+            self.update_preset_dropdown()
+            messagebox.showinfo("Success", f"Preset '{preset_name}' deleted successfully.")
+
+    def save_presets(self):
+        with open("presets.json", "w") as f:
+            json.dump(self.presets, f, indent=4)
+
+    def apply_preset(self, event=None):
         preset_name = self.preset_var.get()
         if preset_name in self.presets:
             preset = self.presets[preset_name]
@@ -214,6 +272,10 @@ class TextGeneratorApp:
 
     def update_preset_dropdown(self):
         self.preset_dropdown['values'] = list(self.presets.keys())
+        if self.presets:
+            self.preset_var.set(list(self.presets.keys())[0])
+        else:
+            self.preset_var.set("")
 
     def setup_variables(self):
         self.cancel_requested = False
