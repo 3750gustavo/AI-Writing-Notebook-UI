@@ -342,7 +342,7 @@ class TextGeneratorApp:
         lorebook_entries = self.lorebook_entries_widgets
 
         if lorebook_entries:
-            lorebook_text = "\n\n".join(
+            lorebook_text = "\n".join(
                 f"Entry {idx+1}: {name_entry.get('1.0', tk.END).strip()}\n{content_entry.get('1.0', tk.END).strip()}"
                 for idx, (_, name_entry, content_entry) in enumerate(lorebook_entries)
                 if name_entry.get('1.0', tk.END).strip() and content_entry.get('1.0', tk.END).strip()
@@ -351,9 +351,9 @@ class TextGeneratorApp:
             lorebook_text = ""
 
         if memory_text:
-            prompt = memory_text + "\n\n" + lorebook_text + "\n\n" + prompt
+            prompt = memory_text + "\n" + lorebook_text + "\n" + prompt
         else:
-            prompt = lorebook_text + "\n\n" + prompt
+            prompt = lorebook_text + "\n" + prompt
 
         if author_notes_text:
             # Find the position of the last two paragraphs
