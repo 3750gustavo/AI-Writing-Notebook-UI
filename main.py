@@ -347,8 +347,15 @@ class TextGeneratorApp:
             prompt = lorebook_text + "\n\n" + prompt
 
         if author_notes_text:
+            # Find the position of the last two paragraphs
             paragraphs = re.split(r'(?<=[.!?])\s+', prompt)
-            prompt = '\n'.join([author_notes_text] + paragraphs)
+            if len(paragraphs) > 1:
+                last_two_paragraphs = paragraphs[-2:]
+                rest_of_prompt = paragraphs[:-2]
+                # Insert author_notes_text between the last two paragraphs
+                prompt = '\n'.join(rest_of_prompt + [last_two_paragraphs[0], author_notes_text, last_two_paragraphs[1]])
+            else:
+                prompt = '\n'.join([author_notes_text] + paragraphs)
 
         return prompt
 
