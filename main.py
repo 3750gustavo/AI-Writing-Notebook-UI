@@ -16,6 +16,12 @@ class Button:
         self.button = tk.Button(master, text=text, command=command)
         self.button.pack(side=side, padx=padx, pady=pady)
 
+    def disable(self):
+        self.button.config(state=tk.DISABLED)
+
+    def enable(self):
+        self.button.config(state=tk.NORMAL)
+
 class ParameterInput:
     def __init__(self, master, label, default_value):
         self.frame = tk.Frame(master)
@@ -327,6 +333,8 @@ class TextGeneratorApp:
         self.last_prompt = ""
         self.last_generated_text = ""
         self.grammar_errors = []  # Store grammar errors
+        self.context_viewer_open = False
+        self.story_info_open = False
 
     def prepare_prompt(self, prompt):
         memory_text = getattr(self, 'memory_text', '')
@@ -361,19 +369,28 @@ class TextGeneratorApp:
         return prompt
 
     def show_context_viewer(self):
+        if self.context_viewer_open:
+            return
+
+        self.buttons['context_viewer'].disable()
         context_prompt = self.prepare_prompt(self.text_widget.get("1.0", tk.END).strip())
 
         popup = tk.Toplevel(self.root)
         popup.title("Context Viewer")
-        popup.geometry("600x400")  # You can adjust the size as needed
+        popup.geometry("600x400")
+        popup.protocol("WM_DELETE_WINDOW", lambda: self.close_context_viewer(popup))
 
         context_text = scrolledtext.ScrolledText(popup, wrap='word', width=80, height=20)
         context_text.pack(expand=True, fill='both', side='left', padx=10, pady=10)
         context_text.insert(tk.END, context_prompt)
         context_text.configure(state='disabled')  # Make the text read-only
 
-        close_button = tk.Button(popup, text="Close", command=popup.destroy)
-        close_button.pack(side='bottom')
+        self.context_viewer_open = True
+
+    def close_context_viewer(self, popup):
+        popup.destroy()
+        self.buttons['context_viewer'].enable()
+        self.context_viewer_open = False
 
     def toggle_advanced_options(self):
         if self.show_advanced.get():
@@ -539,6 +556,10 @@ class TextGeneratorApp:
         self.text_widget.config(font=("TkDefaultFont", self.font_size))
 
     def story_info(self):
+        if self.story_info_open:
+            return
+
+        self.buttons['info'].disable()
         popup = tk.Toplevel(self.root)
         popup.title("Story Information")
 
@@ -572,6 +593,8 @@ class TextGeneratorApp:
 
         popup.protocol("WM_DELETE_WINDOW", lambda: self.save_story_info(popup))
         self.lorebook_frame.bind("<Configure>", lambda e: lorebook_canvas.configure(scrollregion=lorebook_canvas.bbox("all")))
+
+        self.story_info_open = True
 
     def add_lorebook_entry(self):
         entry_id = len(self.lorebook_entries_widgets) + 1
@@ -624,6 +647,8 @@ class TextGeneratorApp:
 
         self.save_session()
         popup.destroy()
+        self.buttons['info'].enable()
+        self.story_info_open = False
 
 if __name__ == "__main__":
     root = tk.Tk()
