@@ -143,7 +143,7 @@ class TextGeneratorApp:
         self.grammar_cache = {}
 
     def save_session(self):
-        text = self.text_widget.get("1.0", tk.END).rstrip("\n")
+        text = self.text_widget.get("1.0", tk.END).strip()
         session_data = {
             "text": text,
             "memory": getattr(self, 'memory_text', ''),
@@ -373,7 +373,8 @@ class TextGeneratorApp:
             return
 
         self.buttons['context_viewer'].disable()
-        context_prompt = self.prepare_prompt(self.text_widget.get("1.0", tk.END).strip())
+        raw_prompt = self.text_widget.get("1.0", tk.END).strip()
+        context_prompt = self.prepare_prompt(raw_prompt)
 
         popup = tk.Toplevel(self.root)
         popup.title("Context Viewer")
@@ -635,8 +636,8 @@ class TextGeneratorApp:
                 self.lorebook_entries_widgets.append((entry_frame, name_entry, content_entry))
 
     def save_story_info(self, popup):
-        self.memory_text = self.memory_entry.get("1.0", tk.END).rstrip("\n")
-        self.author_notes_text = self.authornotes_entry.get("1.0", tk.END).rstrip("\n")
+        self.memory_text = self.memory_entry.get("1.0", tk.END).strip()
+        self.author_notes_text = self.authornotes_entry.get("1.0", tk.END).strip()
 
         self.lorebook_entries_data = {}
         for _, name_entry, content_entry in self.lorebook_entries_widgets:
