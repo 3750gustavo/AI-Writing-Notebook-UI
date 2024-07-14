@@ -177,6 +177,7 @@ class TextGeneratorApp:
     def setup_ui(self):
         self.text_widget = scrolledtext.ScrolledText(self.root, wrap='word', width=60, height=20)
         self.text_widget.pack(fill='both', expand=True, side='left', padx=10, pady=10)
+        self.text_widget.bind("<Button-1>", self.on_text_click)  # Bind click event
 
         control_frame = tk.Frame(self.root)
         control_frame.pack(fill='y', padx=10, pady=10)
