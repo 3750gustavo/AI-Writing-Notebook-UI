@@ -337,31 +337,46 @@ class TextGeneratorApp:
         self.story_info_open = False
 
     def prepare_prompt(self, prompt):
+        """
+        Prepares the final prompt for text generation by integrating memory text, author notes, and lorebook entries.
+
+        Args:
+            prompt (str): The original prompt text from the text widget.
+
+        Returns:
+            str: The final prompt with integrated contextual information at the correct positions.
+
+        Notes:
+            - Order -> Memory Text -> Lorebook Entries -> Prompt -> Author Notes
+        """
+        # Retrieve memory text and author notes text, defaulting to empty strings if not set
         memory_text = getattr(self, 'memory_text', '')
         author_notes_text = getattr(self, 'author_notes_text', '')
+
+        # Retrieve lorebook entries widgets
         lorebook_entries = self.lorebook_entries_widgets
 
+        # Construct lorebook text only if there are actual entries
+        lorebook_text = ""
         if lorebook_entries:
             lorebook_text = "\n".join(
                 f"Entry {idx+1}: {name_entry.get('1.0', tk.END).strip()}\n{content_entry.get('1.0', tk.END).strip()}"
                 for idx, (_, name_entry, content_entry) in enumerate(lorebook_entries)
                 if name_entry.get('1.0', tk.END).strip() and content_entry.get('1.0', tk.END).strip()
             )
-        else:
-            lorebook_text = ""
 
+        # Integrate memory text and lorebook text into the prompt if they are not empty
         if memory_text:
             prompt = memory_text + "\n" + lorebook_text + "\n" + prompt
-        else:
+        elif lorebook_text:
             prompt = lorebook_text + "\n" + prompt
 
+        # Integrate author notes text into the prompt if it is not empty
         if author_notes_text:
-            # Find the position of the last two paragraphs
             paragraphs = re.split(r'(?<=[.!?])\s+', prompt)
             if len(paragraphs) > 1:
                 last_two_paragraphs = paragraphs[-2:]
                 rest_of_prompt = paragraphs[:-2]
-                # Insert author_notes_text between the last two paragraphs
                 prompt = '\n'.join(rest_of_prompt + [last_two_paragraphs[0], author_notes_text, last_two_paragraphs[1]])
             else:
                 prompt = '\n'.join([author_notes_text] + paragraphs)
