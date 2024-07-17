@@ -462,6 +462,8 @@ class TextGeneratorApp:
                         payload = json.loads(event.data)
                         if 'text' in payload['choices'][0]:
                             chunk = payload['choices'][0]['text']
+                            if chunk in ['<|eot_id|>', '<|im_end|>']:
+                                break
                             self.last_generated_text += chunk
                             self.text_widget.insert(tk.END, chunk, 'highlight')  # Tag new text
                             self.text_widget.tag_config('highlight', foreground='blue')  # Style the tag
