@@ -141,6 +141,7 @@ class TextGeneratorApp:
         self.update_preset_dropdown()
 
         self.grammar_cache = {}
+        self.font_size = 12  # default font size
 
     def save_session(self):
         text = self.text_widget.get("1.0", tk.END).strip()
@@ -566,11 +567,11 @@ class TextGeneratorApp:
             self.model_var.set(sorted_models[0])
 
     def increase_font_size(self):
-        self.font_size += 2
+        self.font_size = min(32, self.font_size + 2)  # cap font size at 32
         self.text_widget.config(font=("TkDefaultFont", self.font_size))
 
     def decrease_font_size(self):
-        self.font_size = max(8, self.font_size - 2)
+        self.font_size = max(8, self.font_size - 2)  # floor font size at 8
         self.text_widget.config(font=("TkDefaultFont", self.font_size))
 
     def story_info(self):
