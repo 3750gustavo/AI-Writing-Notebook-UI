@@ -233,26 +233,16 @@ class TextGeneratorApp:
         control_frame = tk.Frame(self.root)
         control_frame.pack(fill='y', padx=10, pady=10)
 
-        # Top buttons
-        top_button_frame = tk.Frame(control_frame)
-        top_button_frame.pack(fill='x', padx=10, pady=10)
+        button_frame = tk.Frame(control_frame)
+        button_frame.pack(fill='x', pady=10)
 
         self.buttons = {
-            'generate': Button(top_button_frame, "Generate", self.start_generation),
-            'cancel': Button(top_button_frame, "Cancel", self.cancel_generation),
-            'retry': Button(top_button_frame, "Retry", lambda: self.retry_or_undo_generation('retry')),
-            'undo': Button(top_button_frame, "Undo", lambda: self.retry_or_undo_generation('undo')),
-            'info': Button(top_button_frame, "Story Info", self.story_info),
-            'context_viewer': Button(top_button_frame, "Context Viewer", self.show_context_viewer),
+            'generate': Button(button_frame, "Generate", self.start_generation, side='left'),
+            'cancel': Button(button_frame, "Cancel", self.cancel_generation, side='left'),
+            'retry': Button(button_frame, "Retry", lambda: self.retry_or_undo_generation('retry'), side='left'),
+            'undo': Button(button_frame, "Undo", lambda: self.retry_or_undo_generation('undo'), side='left'),
+            'info': Button(button_frame, "Story Info", lambda: self.story_info(), side='left'),
         }
-
-        # Pack top buttons
-        self.buttons['generate'].button.pack(fill='x', pady=2)
-        self.buttons['cancel'].button.pack(fill='x', pady=2)
-        self.buttons['retry'].button.pack(fill='x', pady=2)
-        self.buttons['undo'].button.pack(fill='x', pady=2)
-        self.buttons['info'].button.pack(fill='x', pady=2)
-        self.buttons['context_viewer'].button.pack(fill='x', pady=2)
 
         self.setup_advanced_options(control_frame)
 
