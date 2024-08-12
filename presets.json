@@ -86,7 +86,7 @@
         "top_p": 1.0,
         "top_k": -1,
         "min_p": 0.08,
-        "repetition_penalty": 1.00,
+        "repetition_penalty": 1.0,
         "presence_penalty": 0.0
     },
     "Qwen2_Starchat": {
@@ -94,7 +94,7 @@
         "temperature": 0.02,
         "top_p": 0.95,
         "top_k": -1,
-        "min_p": 0.00,
+        "min_p": 0.0,
         "repetition_penalty": 1.0,
         "presence_penalty": 0.91
     },
@@ -106,5 +106,14 @@
         "min_p": 0.02,
         "repetition_penalty": 1.01,
         "presence_penalty": 0.91
+    },
+    "Asterism": {
+        "max_tokens": 222.0,
+        "temperature": 1.68,
+        "top_p": 0.17,
+        "top_k": -1.0,
+        "min_p": 0.08,
+        "repetition_penalty": 1.01,
+        "presence_penalty": 0.66
     }
 }
