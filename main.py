@@ -123,11 +123,55 @@ class PresetManager:
             del self.presets[preset_name]
             self.save_presets()
 
+class StyleManager:
+    def __init__(self, root):
+        self.root = root
+        self.dark_mode = False
+        self.light_bg = 'white'
+        self.light_fg = 'black'
+        self.dark_bg = '#1E1E2E'  # Dark blue-ish color
+        self.dark_fg = 'white'
+
+    def toggle_dark_mode(self):
+        self.dark_mode = not self.dark_mode
+        self.apply_styles(self.root)
+
+    def apply_styles(self, widget):
+        bg_color = self.dark_bg if self.dark_mode else self.light_bg
+        fg_color = self.dark_fg if self.dark_mode else self.light_fg
+
+        widget_styles = {
+            tk.Tk: lambda: widget.config(bg=bg_color),
+            tk.Frame: lambda: widget.config(bg=bg_color),
+            tk.Label: lambda: widget.config(bg=bg_color, fg=fg_color),
+            tk.Button: lambda: widget.config(bg=bg_color, fg=fg_color),
+            tk.Checkbutton: lambda: widget.config(bg=bg_color, fg=fg_color, selectcolor=bg_color),
+            tk.Text: lambda: widget.config(bg=bg_color, fg=fg_color),
+            scrolledtext.ScrolledText: lambda: widget.config(bg=bg_color, fg=fg_color),
+            ttk.Combobox: lambda: self.configure_combobox(widget, bg_color, fg_color)
+        }
+
+        if type(widget) in widget_styles:
+            widget_styles[type(widget)]()
+            if isinstance(widget, tk.Tk) or isinstance(widget, tk.Frame):
+                for child in widget.winfo_children():
+                    self.apply_styles(child)
+
+        # Update any text inside text_widget with highlight tag to match the new color scheme
+        if isinstance(widget, tk.Text) and widget.tag_ranges('highlight'):
+            widget.tag_config('highlight', foreground='blue' if self.dark_mode == False else 'cyan')
+
+    def configure_combobox(self, widget, bg_color, fg_color):
+        style = ttk.Style()
+        style.configure('TCombobox', background=bg_color, foreground=fg_color)
+        widget.config(style='TCombobox')
+
 class TextGeneratorApp:
     def __init__(self, root):
         self.root = root
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)  # Register the close event handler
         self.root.title("AI Writing Notebook UI")
+        self.style_manager = StyleManager(self.root)
 
         self.lorebook_entries_widgets = []
         self.preset_manager = PresetManager("presets.json")
@@ -189,16 +233,26 @@ class TextGeneratorApp:
         control_frame = tk.Frame(self.root)
         control_frame.pack(fill='y', padx=10, pady=10)
 
-        button_frame = tk.Frame(control_frame)
-        button_frame.pack(fill='x', pady=10)
+        # Top buttons
+        top_button_frame = tk.Frame(control_frame)
+        top_button_frame.pack(fill='x', padx=10, pady=10)
 
         self.buttons = {
-            'generate': Button(button_frame, "Generate", self.start_generation, side='left'),
-            'cancel': Button(button_frame, "Cancel", self.cancel_generation, side='left'),
-            'retry': Button(button_frame, "Retry", lambda: self.retry_or_undo_generation('retry'), side='left'),
-            'undo': Button(button_frame, "Undo", lambda: self.retry_or_undo_generation('undo'), side='left'),
-            'info': Button(button_frame, "Story Info", lambda: self.story_info(), side='left'),
+            'generate': Button(top_button_frame, "Generate", self.start_generation),
+            'cancel': Button(top_button_frame, "Cancel", self.cancel_generation),
+            'retry': Button(top_button_frame, "Retry", lambda: self.retry_or_undo_generation('retry')),
+            'undo': Button(top_button_frame, "Undo", lambda: self.retry_or_undo_generation('undo')),
+            'info': Button(top_button_frame, "Story Info", self.story_info),
+            'context_viewer': Button(top_button_frame, "Context Viewer", self.show_context_viewer),
         }
+
+        # Pack top buttons
+        self.buttons['generate'].button.pack(fill='x', pady=2)
+        self.buttons['cancel'].button.pack(fill='x', pady=2)
+        self.buttons['retry'].button.pack(fill='x', pady=2)
+        self.buttons['undo'].button.pack(fill='x', pady=2)
+        self.buttons['info'].button.pack(fill='x', pady=2)
+        self.buttons['context_viewer'].button.pack(fill='x', pady=2)
 
         self.setup_advanced_options(control_frame)
 
@@ -207,14 +261,21 @@ class TextGeneratorApp:
             self.audio_toggle_checkbox = tk.Checkbutton(control_frame, text="Enable Audio", variable=self.audio_toggle_var)
             self.audio_toggle_checkbox.pack(fill='x', pady=5)
 
-        font_size_frame = tk.Frame(self.root)
-        font_size_frame.pack(fill='x', side='bottom', padx=10, pady=(0, 10))
+        # Bottom buttons
+        bottom_button_frame = tk.Frame(self.root)
+        bottom_button_frame.pack(fill='x', side='bottom', padx=10, pady=(0, 10))
 
-        tk.Button(font_size_frame, text="Check Grammar", command=self.check_grammar).pack(side='right')
-        tk.Button(font_size_frame, text="+", command=self.increase_font_size).pack(side='right')
-        tk.Button(font_size_frame, text="-", command=self.decrease_font_size).pack(side='right')
-        # Add the Context Viewer button next to the Check Grammar button
-        self.buttons['context_viewer'] = Button(font_size_frame, "Context Viewer", self.show_context_viewer, side='right')
+        tk.Button(bottom_button_frame, text="+", command=self.increase_font_size).pack(side='left')
+        tk.Button(bottom_button_frame, text="-", command=self.decrease_font_size).pack(side='left')
+
+        self.dark_mode_toggle = tk.Button(bottom_button_frame, text="Toggle Dark Mode", command=self.toggle_dark_mode)
+        self.dark_mode_toggle.config(font=("TkDefaultFont", 8))
+        self.dark_mode_toggle.pack(side='left', padx=2, pady=2)
+
+        tk.Button(bottom_button_frame, text="Check Grammar", command=self.check_grammar).pack(side='left')
+
+    def toggle_dark_mode(self):
+        self.style_manager.toggle_dark_mode()
 
     def setup_advanced_options(self, parent):
         self.advanced_frame = tk.Frame(parent)
@@ -467,7 +528,10 @@ class TextGeneratorApp:
                                 break
                             self.last_generated_text += chunk
                             self.text_widget.insert(tk.END, chunk, 'highlight')  # Tag new text
-                            self.text_widget.tag_config('highlight', foreground='blue')  # Style the tag
+                            if self.style_manager.dark_mode == False:
+                                self.text_widget.tag_config('highlight', foreground='blue')  # Style the tag
+                            else:
+                                self.text_widget.tag_config('highlight', foreground='cyan')
                             self.text_widget.see(tk.END)
                         elif 'finish_reason' in payload['choices'][0]:
                             print(f"Text generation finished. Reason: {payload['choices'][0]['finish_reason']}")
