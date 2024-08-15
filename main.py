@@ -74,7 +74,7 @@ class APIHandler:
         try:
             response = requests.post(
                 "https://api.languagetool.org/v2/check",
-                data={"text": text, "language": "en-US"}
+                data={"text": text, "language": "auto"}
             )
             response.raise_for_status()
             return response.json()
