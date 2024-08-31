@@ -482,6 +482,10 @@ class TextGeneratorApp:
         prepared_prompt = self.prepare_prompt(raw_prompt)
         self.cancel_requested = False
         self.text_widget.tag_remove('highlight', '1.0', tk.END)
+
+        # Disable the generate button to prevent multiple requests
+        self.buttons['generate'].disable()
+
         threading.Thread(target=self.generate_text, args=(prepared_prompt,)).start()
         self.save_session()
 
@@ -489,6 +493,7 @@ class TextGeneratorApp:
         self.cancel_requested = True
         if config['USE_TTS']:
             stop_audio()
+        self.buttons['generate'].enable()
 
     def generate_text(self, prompt):
         data = {
@@ -533,6 +538,9 @@ class TextGeneratorApp:
             self.text_widget.insert(tk.END, "The request timed out")
         except json.JSONDecodeError:
             self.text_widget.insert(tk.END, "Failed to decode JSON response")
+
+        finally:
+            self.buttons['generate'].enable()
 
         if config['USE_TTS']:
             if self.audio_toggle_var.get():
