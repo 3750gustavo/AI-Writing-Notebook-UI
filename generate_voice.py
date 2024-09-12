@@ -74,4 +74,4 @@ def stop_audio():
 
 # This part is only executed when the script is run directly
 if __name__ == "__main__":
-    generate_voice("Sweetheart...")
+    generate_voice("""sweatheart...""")
