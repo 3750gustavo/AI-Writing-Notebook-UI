@@ -1,6 +1,7 @@
 requests==2.31.0
 sseclient-py==1.8.0
-pygame
+pygame==2.6.0
 pydantic
 novelai-python
 urllib3==2.2.1
+markdown==3.7
