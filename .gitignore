@@ -11,6 +11,7 @@ session.json
 generate_voice.mp3
 config.json
 temp.py
+rendered_markdown.html
 
 # Ignore development tools
 .vscode/
