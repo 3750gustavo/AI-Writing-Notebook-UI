@@ -5,6 +5,9 @@ from tkinter import ttk, scrolledtext, simpledialog, messagebox
 import requests,sseclient
 import re
 
+# Import the new markdown_viewer module
+from markdown_viewer import show_markdown_viewer
+
 with open("config.json", "r") as f:
     config = json.load(f)
 
@@ -263,6 +266,7 @@ class TextGeneratorApp:
         self.dark_mode_toggle.pack(side='left', padx=2, pady=2)
 
         tk.Button(bottom_button_frame, text="Check Grammar", command=self.check_grammar).pack(side='left')
+        tk.Button(bottom_button_frame, text="Markdown", command=self.show_markdown_viewer).pack(side='left')  # New Markdown button
 
     def toggle_dark_mode(self):
         self.style_manager.toggle_dark_mode()
@@ -730,6 +734,10 @@ class TextGeneratorApp:
         popup.destroy()
         self.buttons['info'].enable()
         self.story_info_open = False
+
+    def show_markdown_viewer(self):
+        text = self.text_widget.get("1.0", tk.END).strip()
+        show_markdown_viewer(self.root, text)
 
 if __name__ == "__main__":
     root = tk.Tk()
