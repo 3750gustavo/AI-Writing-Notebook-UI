@@ -44,24 +44,6 @@
         "repetition_penalty": 1.1,
         "presence_penalty": 0.0
     },
-    "Shortwave": {
-        "max_tokens": 222,
-        "temperature": 1.53,
-        "top_p": 0.64,
-        "top_k": 33,
-        "min_p": 0.02,
-        "repetition_penalty": 1.07,
-        "presence_penalty": 0.0
-    },
-    "simple-1": {
-        "max_tokens": 222.0,
-        "temperature": 0.7,
-        "top_p": 0.9,
-        "top_k": 20.0,
-        "min_p": 0.02,
-        "repetition_penalty": 1.0,
-        "presence_penalty": 0.66
-    },
     "Universal Light": {
         "max_tokens": 222,
         "temperature": 1.25,
@@ -124,5 +106,77 @@
         "min_p": 0.15,
         "repetition_penalty": 1.0,
         "presence_penalty": 0.0
+    },
+    "Default Libre": {
+        "max_tokens": 222.0,
+        "temperature": 0.73,
+        "top_p": 0.92,
+        "top_k": 100.0,
+        "min_p": 0.02,
+        "repetition_penalty": 1.01,
+        "presence_penalty": 0.35
+    },
+    "Lzlv Universal": {
+        "max_tokens": 222.0,
+        "temperature": 0.87,
+        "top_p": 0.81,
+        "top_k": -1.0,
+        "min_p": 0.02,
+        "repetition_penalty": 1.08,
+        "presence_penalty": 0.0
+    },
+    "Lunaris": {
+        "max_tokens": 222.0,
+        "temperature": 1.4,
+        "top_p": 1.0,
+        "top_k": -1.0,
+        "min_p": 0.1,
+        "repetition_penalty": 1.0,
+        "presence_penalty": 0.0
+    },
+    "Celeste-Stable": {
+        "max_tokens": 222.0,
+        "temperature": 0.4,
+        "top_p": 1.0,
+        "top_k": -1.0,
+        "min_p": 0.1,
+        "repetition_penalty": 1.08,
+        "presence_penalty": 0.0
+    },
+    "Celeste_grounded": {
+        "max_tokens": 222.0,
+        "temperature": 0.3,
+        "top_p": 1.0,
+        "top_k": -1.0,
+        "min_p": 0.02,
+        "repetition_penalty": 1.05,
+        "presence_penalty": 0.0
+    },
+    "Jirago_Texy": {
+        "max_tokens": 222.0,
+        "temperature": 1.55,
+        "top_p": 0.5,
+        "top_k": 50.0,
+        "min_p": 0.02,
+        "repetition_penalty": 1.1,
+        "presence_penalty": 0.4
+    },
+    "Texy_norep": {
+        "max_tokens": 222.0,
+        "temperature": 1.08,
+        "top_p": 1.0,
+        "top_k": -1.0,
+        "min_p": 0.02,
+        "repetition_penalty": 1.0,
+        "presence_penalty": 0.0
+    },
+    "Nexus Stable Event": {
+        "max_tokens": 222.0,
+        "temperature": 0.8,
+        "top_p": 0.77,
+        "top_k": -1.0,
+        "min_p": 0.02,
+        "repetition_penalty": 1.0,
+        "presence_penalty": 1.0
     }
 }
