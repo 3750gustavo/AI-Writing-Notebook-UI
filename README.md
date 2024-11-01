@@ -5,6 +5,24 @@
 ## Description
 A GUI-based AI writing assistant that supports text generation, session saving and loading, advanced options toggling, and voice generation for the generated text.
 
+## Table of Contents
+- [Description](#description)
+- [Features](#features)
+- [Installation and Usage](#installation-and-usage)
+  - [Starting the Application](#starting-the-application)
+  - [Using the Application](#using-the-application)
+- [What preset I choose?](#what-preset-i-choose)
+    - [Preset Selection Guide](#preset-selection-guide)
+    - [Additional Tips for Choosing a Preset](#additional-tips-for-choosing-a-preset)
+- [Configuration](#configuration)
+  - [Session Management](#session-management)
+  - [Advanced Options](#advanced-options)
+  - [Voice Generation](#voice-generation)
+- [Requirements](#requirements)
+- [Contributing](#contributing)
+- [License](#license)
+
+
 ## Features
 - **Text Generation:** Generates text based on the provided prompt using AI models.
 - **Session Management:** Saves and loads the current session to resume writing from where you left off.
@@ -30,6 +48,35 @@ chmod +x start.sh
 - If you have enabled TTS support, you can toggle the "Enable Audio" checkbox to hear the generated text.
 - Save your session by closing the application or by using the buttons `Generate` and `Cancel` to save the current state of the text area.
 - Load your session by reopening the application.
+
+## **What Preset Should I Choose?**
+------------------------------------
+| **Preset** | **Description** | **Best For** | **Key Characteristics** |
+| --- | --- | --- | --- |
+| **Default** | Balanced creativity and coherence for general use. | **Most Tasks**, **Beginners** | Medium Temperature, Balanced Parameters |
+| **NovelAI-Best Guess** | Tamed version of Default, more predictable. | **Consistency-Driven Tasks** | Higher Consistency, Lower Creativity |
+| **NovelAI-Storywriter** | Coherent, focused, and less repetitive for storytelling. | **Storytelling**, **Structured Content** | Smaller Token Pool, Low Temperature, High Repetition Penalty |
+| **Starchat (Qwen2 variant)** | Deterministic tasks without min_p. | **Specific, Predictable Outcomes** | High Predictability, Low Creativity |
+| **Lunaris & Universal Fight** | Experimental, low control, potentially chaotic. | **Experimental Writing**, **High Risk, High Reward** | Very Low Control, High Potential for Incoherence |
+| **Asterism** | Highly randomized, controlled chaos. | **Highly Creative, Abstract Content** | Very High Temperature, Intense Token Filter |
+| **MagnumHotLane & Texy_norep** | Balanced randomness for diverse responses. | **Tasks Requiring Variance**, **Intermediate Users** | Medium-High Temperature, Lower min_p for Texy |
+| **Nexus Stable Event & Lzlv Universal** | Stable, coherent outputs similar to Storywriter. | **Consistent, Structured Writing** | Similar to Storywriter, but Less Effective |
+
+### **Preset Selection Guide**
+-----------------------------
+
+* **Need a starting point?** → **Default**
+* **Want something more predictable?** → **NovelAI-Best Guess** or **NovelAI-Storywriter**
+* **Writing a story?** → **NovelAI-Storywriter**
+* **Math or code generation?** → **Starchat** or just pick one of the more predictable presets
+* **Want to unleash chaos?** → **Lunaris & Universal Fight** or **Asterism** for a controlled chaos
+* **Need a balanced randomness?** → **MagnumHotLane & Texy_norep**
+
+### **Additional Tips for Choosing a Preset**
+
+* **Beginners**: Start with **Default**, but consider **NovelAI-Storywriter** when things start to get repetitive.
+* **Consistency**: **NovelAI-Best Guess** and **NovelAI-Storywriter** are your best bets.
+* **Creativity**: **Asterism** and **Lunaris & Universal Fight** are the most creative presets.
 
 ## Configuration
 The application uses a `config.json` file for configuration. You can customize the following settings:
