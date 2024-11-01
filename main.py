@@ -73,6 +73,11 @@ class APIHandler:
         return requests.post(f"{cls.BASE_URL}/completions", json=data, headers=cls.HEADERS, timeout=300, stream=True)
 
     @staticmethod
+    def close_session(response):
+        if response:
+            response.close()
+
+    @staticmethod
     async def check_grammar(text):
         try:
             response = requests.post(
@@ -515,6 +520,7 @@ class TextGeneratorApp:
             self.last_generated_text = ""
             for event in client.events():
                 if self.cancel_requested:
+                    APIHandler.close_session(response)  # Close the request to abort the server-side processing
                     break
                 if event.data:
                     try:
