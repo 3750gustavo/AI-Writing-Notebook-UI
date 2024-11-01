@@ -19,7 +19,9 @@ class MarkdownViewer:
         extensions = [
             'markdown.extensions.extra',
             'markdown.extensions.codehilite',
-            'markdown.extensions.toc'
+            'markdown.extensions.toc',
+            'markdown.extensions.tables',
+            'markdown.extensions.admonition'
         ]
 
         md = markdown.Markdown(extensions=extensions)
@@ -28,6 +30,63 @@ class MarkdownViewer:
         # Custom CSS and JavaScript to enhance rendering
         custom_css = """
         <style>
+            table {
+                border-collapse: collapse;
+                width: 100%;
+            }
+            table, th, td {
+                border: 1px solid black;
+            }
+            th, td {
+                padding: 10px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+                font-weight: bold;
+            }
+            blockquote {
+                background-color: #f9f9f9;
+                border-left: 10px solid #ccc;
+                margin: 1.5em 10px;
+                padding: 0.5em 10px;
+            }
+            img {
+                max-width: 100%;
+            }
+            .admonition {
+                margin: 1em 0;
+                padding: 1em;
+                border-left: 4px solid #ccc;
+                background-color : #f9f9f9;
+            }
+            .admonition-title {
+                margin: 0;
+                padding: 0;
+                font-weight: bold;
+                color: #333;
+            }
+            .admonition p:first-child {
+                margin-top: 0;
+            }
+            .admonition p:last-child {
+                margin-bottom: 0;
+            }
+            .admonition.note {
+                border-color: #007bff;
+            }
+            .admonition.warning {
+                border-color: #ff9900;
+            }
+            .admonition.danger {
+                border-color: #ff0000;
+            }
+            .admonition.error {
+                border-color: #dc3545;
+            }
+            .admonition.info {
+                border-color: #17a2b8;
+            }
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 background-color: #f4f4f4;
