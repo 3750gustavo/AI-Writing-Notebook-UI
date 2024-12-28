@@ -5,3 +5,5 @@ pydantic
 novelai-python
 urllib3==2.2.1
 markdown==3.7
+pymdown-extensions==10.9
+python-markdown-math==0.8
