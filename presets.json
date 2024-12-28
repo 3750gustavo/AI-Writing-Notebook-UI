@@ -178,5 +178,23 @@
         "min_p": 0.02,
         "repetition_penalty": 1.0,
         "presence_penalty": 1.0
+    },
+    "multi stable": {
+        "max_tokens": 222.0,
+        "temperature": 0.59,
+        "top_p": 1.0,
+        "top_k": -1.0,
+        "min_p": 0.05,
+        "repetition_penalty": 1.03,
+        "presence_penalty": 0.0
+    },
+    "no rep det": {
+        "max_tokens": 222.0,
+        "temperature": 0.35,
+        "top_p": 1.0,
+        "top_k": -1.0,
+        "min_p": 0.025,
+        "repetition_penalty": 1.0,
+        "presence_penalty": 0.0
     }
 }
