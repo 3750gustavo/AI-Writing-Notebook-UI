@@ -21,7 +21,8 @@ class MarkdownViewer:
             'markdown.extensions.codehilite',
             'markdown.extensions.toc',
             'markdown.extensions.tables',
-            'markdown.extensions.admonition'
+            'markdown.extensions.admonition',
+            'pymdownx.arithmatex'
         ]
 
         md = markdown.Markdown(extensions=extensions)
