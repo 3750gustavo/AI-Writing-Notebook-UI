@@ -448,7 +448,7 @@ class TextGeneratorApp:
         if self.context_viewer_open:
             return
 
-        self.buttons['context_viewer'].disable()
+        self.context_viewer_button.disable()
         raw_prompt = self.text_widget.get("1.0", tk.END).strip()
         context_prompt = self.prepare_prompt(raw_prompt)
 
@@ -466,7 +466,7 @@ class TextGeneratorApp:
 
     def close_context_viewer(self, popup):
         popup.destroy()
-        self.buttons['context_viewer'].enable()
+        self.context_viewer_button.enable()
         self.context_viewer_open = False
 
     def toggle_advanced_options(self):
@@ -654,37 +654,39 @@ class TextGeneratorApp:
         popup = tk.Toplevel(self.root)
         popup.title("Story Information")
 
+        # Memory Entry
         tk.Label(popup, text="Memory:").pack(anchor='w')
         self.memory_entry = scrolledtext.ScrolledText(popup, wrap='word', width=50, height=10)
         self.memory_entry.pack(fill='x', padx=10, pady=5)
         self.memory_entry.insert(tk.END, getattr(self, 'memory_text', ''))
 
+        # Author Notes Entry
         tk.Label(popup, text="Author Notes:").pack(anchor='w')
         self.authornotes_entry = scrolledtext.ScrolledText(popup, wrap='word', width=50, height=10)
         self.authornotes_entry.pack(fill='x', padx=10, pady=5)
         self.authornotes_entry.insert(tk.END, getattr(self, 'author_notes_text', ''))
 
+        # Lorebook Entries
         tk.Label(popup, text="Lorebook Entries:").pack(anchor='w')
-
         lorebook_canvas = tk.Canvas(popup)
         lorebook_canvas.pack(side='left', fill='both', expand=True)
-
         scrollbar = ttk.Scrollbar(popup, orient="vertical", command=lorebook_canvas.yview)
         scrollbar.pack(side='right', fill='y')
-
         self.lorebook_frame = tk.Frame(lorebook_canvas)
         lorebook_canvas.create_window((0, 0), window=self.lorebook_frame, anchor='nw')
         lorebook_canvas.configure(yscrollcommand=scrollbar.set)
-
         self.add_lorebook_button = tk.Button(popup, text="New Entry", command=self.add_lorebook_entry)
         self.add_lorebook_button.pack(pady=10)
-
         self.lorebook_entries_widgets = []
         self.load_lorebook_entries()
 
+        # Add Context Viewer button at the bottom
+        button_frame = tk.Frame(popup)
+        button_frame.pack(fill='x', side='bottom', padx=10, pady=10)
+        self.context_viewer_button = Button(button_frame, "Show Context", self.show_context_viewer, side='left')
+
         popup.protocol("WM_DELETE_WINDOW", lambda: self.save_story_info(popup))
         self.lorebook_frame.bind("<Configure>", lambda e: lorebook_canvas.configure(scrollregion=lorebook_canvas.bbox("all")))
-
         self.story_info_open = True
 
     def add_lorebook_entry(self):
