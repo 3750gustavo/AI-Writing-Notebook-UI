@@ -632,8 +632,29 @@ class TextGeneratorApp:
         self.save_session()
         popup.destroy()
 
+    def group_models_by_size(self, models):
+        size_pattern = re.compile(r'(\d+)x(\d+)[bB]|(\d+)[bB]', re.IGNORECASE)
+
+        def get_size(model_name):
+            match = size_pattern.search(model_name)
+            if match:
+                if match.group(1) and match.group(2):  # multiplied size
+                    multiplier = int(match.group(1))
+                    size = int(match.group(2))
+                    return multiplier * size
+                else:  # direct size
+                    size = int(match.group(3))
+                    return size
+            else:
+                return float('inf')  # place at the end
+
+        # Sort models based on size and then alphabetically
+        sorted_models = sorted(models, key=lambda x: (get_size(x), x))
+        return sorted_models
+
     def update_model_dropdown(self, models):
-        sorted_models = sorted(models)
+        sorted_models = self.group_models_by_size(models)
+        # sorted_models = sorted(models)
         self.model_dropdown['values'] = sorted_models
         if sorted_models:
             self.model_var.set(sorted_models[0])
