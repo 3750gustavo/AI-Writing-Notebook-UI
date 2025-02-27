@@ -571,8 +571,13 @@ class TextGeneratorApp:
             self.save_session()
 
     def check_grammar(self):
+        """Run grammar check in background thread to prevent UI freezing. Check the last 19k characters."""
+        threading.Thread(target=self._check_grammar_async).start()
+
+    def _check_grammar_async(self):
+        """Asynchronous grammar check implementation. Check the last 19k characters."""
         full_text = self.text_widget.get("1.0", "end-1c")
-        text_to_check = full_text[-20000:]
+        text_to_check = full_text[-19000:] # api free limit is 20k, use 19k for api overhead
         offset = len(full_text) - len(text_to_check)
 
         text_hash = hashlib.md5(text_to_check.encode()).hexdigest()
@@ -585,9 +590,10 @@ class TextGeneratorApp:
             loop.close()
             self.grammar_cache[text_hash] = results
 
-        self.display_grammar_errors(results, offset)
+        self.root.after(0, lambda: self.display_grammar_errors(results, offset))
 
     def display_grammar_errors(self, results, offset):
+        """Display grammar errors with relative positioning based on the last 19k characters"""
         self.grammar_errors = []  # Clear previous errors
         self.text_widget.tag_remove('grammar_error', '1.0', tk.END)  # Clear previous highlights
 
