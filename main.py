@@ -270,7 +270,7 @@ class TextGeneratorApp:
         self.dark_mode_toggle.config(font=("TkDefaultFont", 8))
         self.dark_mode_toggle.pack(side='left', padx=2, pady=2)
 
-        tk.Button(bottom_button_frame, text="Check Grammar", command=self.check_grammar).pack(side='left')
+        self.grammar_button = Button(bottom_button_frame, text="Check Grammar", command=self.check_grammar, side='left')
         tk.Button(bottom_button_frame, text="Markdown", command=self.show_markdown_viewer).pack(side='left')  # New Markdown button
 
     def toggle_dark_mode(self):
@@ -572,6 +572,8 @@ class TextGeneratorApp:
 
     def check_grammar(self):
         """Run grammar check in background thread to prevent UI freezing. Check the last 19k characters."""
+        # disables grammar button until it finishes running
+        self.grammar_button.disable()
         threading.Thread(target=self._check_grammar_async).start()
 
     def _check_grammar_async(self):
@@ -591,6 +593,7 @@ class TextGeneratorApp:
             self.grammar_cache[text_hash] = results
 
         self.root.after(0, lambda: self.display_grammar_errors(results, offset))
+        self.root.after(0, self.grammar_button.enable)
 
     def display_grammar_errors(self, results, offset):
         """Display grammar errors with relative positioning based on the last 19k characters"""
