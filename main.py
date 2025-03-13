@@ -49,8 +49,9 @@ class APIHandler:
     @classmethod
     def fetch_models(cls):
         cls.load_api_key()
+        # TODO: make it try without v1 if it fails
         try:
-            response = requests.get(f"{cls.BASE_URL}/models", headers=cls.HEADERS)
+            response = requests.get(f"{cls.BASE_URL}/v1/models", headers=cls.HEADERS)
             response.raise_for_status()
 
             data = response.json()
@@ -70,7 +71,8 @@ class APIHandler:
     @classmethod
     def generate_text(cls, data):
         cls.load_api_key()
-        return requests.post(f"{cls.BASE_URL}/completions", json=data, headers=cls.HEADERS, timeout=300, stream=True)
+        # TODO: make it try without v1 if it fails
+        return requests.post(f"{cls.BASE_URL}/v1/completions", json=data, headers=cls.HEADERS, timeout=300, stream=True)
 
     @staticmethod
     def close_session(response):
