@@ -11,7 +11,7 @@ A GUI-based AI writing assistant that supports text generation, session saving a
 - [Installation and Usage](#installation-and-usage)
   - [Starting the Application](#starting-the-application)
   - [Using the Application](#using-the-application)
-- [What preset I choose?](#what-preset-i-choose)
+- [What Preset Should I Choose?](#what-preset-should-i-choose)
     - [Preset Selection Guide](#preset-selection-guide)
     - [Additional Tips for Choosing a Preset](#additional-tips-for-choosing-a-preset)
 - [Configuration](#configuration)
