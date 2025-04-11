@@ -173,7 +173,7 @@ class StyleManager:
 
     def configure_combobox(self, widget, text_color, background_color):
         style = ttk.Style()
-        style.theme_use('clam')  # Using 'clam' theme allows configuring Combobox colors
+        # we don't set theme as it makes the UI uglier
         style.configure('TCombobox', background=background_color, foreground=text_color, fieldbackground=background_color, bordercolor=background_color)
         style.map('TCombobox', foreground=[('focus', text_color)], background=[('focus', background_color)])
         widget.config(style='TCombobox')
