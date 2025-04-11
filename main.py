@@ -137,28 +137,28 @@ class StyleManager:
     def __init__(self, root):
         self.root = root
         self.dark_mode = False
-        self.light_bg = 'white'
-        self.light_fg = 'black'
-        self.dark_bg = '#1E1E2E'  # Dark blue-ish color
-        self.dark_fg = 'white'
+        self.main_background_color = 'white'
+        self.main_text_color = 'black'
+        self.dark_background_color = '#1E1E2E'  # Dark blue-ish color
+        self.dark_text_color = 'white'
 
     def toggle_dark_mode(self):
         self.dark_mode = not self.dark_mode
         self.apply_styles(self.root)
 
     def apply_styles(self, widget):
-        bg_color = self.dark_bg if self.dark_mode else self.light_bg
-        fg_color = self.dark_fg if self.dark_mode else self.light_fg
+        background_color = self.dark_background_color if self.dark_mode else self.main_background_color
+        text_color = self.dark_text_color if self.dark_mode else self.main_text_color
 
         widget_styles = {
-            tk.Tk: lambda: widget.config(bg=bg_color),
-            tk.Frame: lambda: widget.config(bg=bg_color),
-            tk.Label: lambda: widget.config(bg=bg_color, fg=fg_color),
-            tk.Button: lambda: widget.config(bg=bg_color, fg=fg_color),
-            tk.Checkbutton: lambda: widget.config(bg=bg_color, fg=fg_color, selectcolor=bg_color),
-            tk.Text: lambda: widget.config(bg=bg_color, fg=fg_color),
-            scrolledtext.ScrolledText: lambda: widget.config(bg=bg_color, fg=fg_color),
-            ttk.Combobox: lambda: self.configure_combobox(widget, bg_color, fg_color)
+            tk.Tk: lambda: widget.config(bg=background_color),
+            tk.Frame: lambda: widget.config(bg=background_color),
+            tk.Label: lambda: widget.config(bg=background_color, fg=text_color),
+            tk.Button: lambda: widget.config(bg=background_color, fg=text_color),
+            tk.Checkbutton: lambda: widget.config(bg=background_color, fg=text_color, selectcolor=background_color),
+            tk.Text: lambda: widget.config(bg=background_color, fg=text_color),
+            scrolledtext.ScrolledText: lambda: widget.config(bg=background_color, fg=text_color),
+            ttk.Combobox: lambda: self.configure_combobox(widget, 'black', 'white') # default for both modes (improves clarity)
         }
 
         if type(widget) in widget_styles:
@@ -171,9 +171,11 @@ class StyleManager:
         if isinstance(widget, tk.Text) and widget.tag_ranges('highlight'):
             widget.tag_config('highlight', foreground='blue' if self.dark_mode == False else 'cyan')
 
-    def configure_combobox(self, widget, bg_color, fg_color):
+    def configure_combobox(self, widget, text_color, background_color):
         style = ttk.Style()
-        style.configure('TCombobox', background=bg_color, foreground=fg_color)
+        style.theme_use('clam')  # Using 'clam' theme allows configuring Combobox colors
+        style.configure('TCombobox', background=background_color, foreground=text_color, fieldbackground=background_color, bordercolor=background_color)
+        style.map('TCombobox', foreground=[('focus', text_color)], background=[('focus', background_color)])
         widget.config(style='TCombobox')
 
 class TextGeneratorApp:
