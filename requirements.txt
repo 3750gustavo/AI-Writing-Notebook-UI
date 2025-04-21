@@ -1,8 +1,8 @@
 requests==2.31.0
 sseclient-py==1.8.0
 pygame==2.6.0
-pydantic
-novelai-python
+pydantic==2.8.2
+novelai-python==0.4.11
 urllib3==2.2.1
 markdown==3.7
 pymdown-extensions==10.9
