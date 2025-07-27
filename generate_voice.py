@@ -71,9 +71,10 @@ async def generate_voice_async(text: str):
 
 def treat_text(text: str) -> str:
     """
-    Removes all asterisks ('*') from the input text.
+    Removes all asterisks ('*') and hashes ('#') from the input text.
     """
     treated_text = re.sub(r'\*', '', text)
+    treated_text = re.sub(r'\#', '', treated_text)
     return treated_text
 
 def split_text(text: str, max_length: int = 1000) -> list:
